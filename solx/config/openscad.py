@@ -4,6 +4,7 @@ This module provides:
 - OpenSCADNotFoundError: exception when OpenSCAD executable is not found
 - get_openscad_path: locate OpenSCAD executable on the system
 """
+
 # %%
 import os
 import shutil
@@ -12,6 +13,7 @@ from pathlib import Path
 
 class OpenSCADNotFoundError(RuntimeError):
     """Exception raised when OpenSCAD executable is not found on the system."""
+
     pass
 
 
@@ -47,4 +49,6 @@ def get_openscad_path() -> str:
     raise OpenSCADNotFoundError(
         "OpenSCAD not found.\nInstall OpenSCAD or set OPENSCAD_PATH."
     )
+
+
 # %%

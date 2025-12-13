@@ -29,3 +29,6 @@ convention = "google"
 strict = true
 warn_unused_ignores = true
 warn_return_any = true
+
+[tool.ruff.isort]
+known-first-party = ["solx"]
