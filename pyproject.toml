@@ -17,10 +17,6 @@ dev = [
 
 [tool.ruff]
 select = ["E", "F", "W", "I", "D"]
-ignore = [
-    # D100-D104: missing docstring warnings
-    "D104",
-]
 
 [tool.ruff.pydocstyle]
 convention = "google"

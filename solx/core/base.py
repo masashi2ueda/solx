@@ -38,6 +38,22 @@ class SolxObject:
         """
         _renderer.render(self.node)
 
+    def save_scad(self, path: str) -> None:
+        """Save the SolxObject as an OpenSCAD (.scad) file.
+
+        Args:
+            path(str): The file path to save the .scad file.
+        """
+        solid.scad_render_to_file(self.node, path)
+
+    def save_stl(self, path: str) -> None:
+        """Export the SolxObject as an STL file.
+
+        Args:
+            path(str): The file path to save the .stl file.
+        """
+        _renderer.render(self.node, outfile=path)
+
     def translate(self, translation_vector: Vector3D) -> SolxObject:
         """Translate the SolxObject by a given vector.
 
@@ -82,3 +98,70 @@ class SolxObject:
             Self for method chaining.
         """
         return self.translate((0.0, 0.0, distance))
+
+    def rotate(self, rotation_angles: Vector3D) -> SolxObject:
+        """Rotate the SolxObject by given angles around each axis.
+
+        Args:
+            rotation_angles: The rotation angles (in degrees) as a tuple, numpy array, float, or list.
+
+        Returns:
+            Self for method chaining.
+        """
+        normalized_angles = normalize_vector3d(rotation_angles)
+        return SolxObject(solid.rotate(normalized_angles)(self.node))
+
+    def rotate_x(self, angle: float) -> SolxObject:
+        """Rotate the SolxObject around the X-axis.
+
+        Args:
+            angle: The rotation angle (in degrees) around the X-axis.
+
+        Returns:
+            Self for method chaining.
+        """
+        return self.rotate((angle, 0.0, 0.0))
+
+    def rotate_y(self, angle: float) -> SolxObject:
+        """Rotate the SolxObject around the Y-axis.
+
+        Args:
+            angle: The rotation angle (in degrees) around the Y-axis.
+
+        Returns:
+            Self for method chaining.
+        """
+        return self.rotate((0.0, angle, 0.0))
+
+    def rotate_z(self, angle: float) -> SolxObject:
+        """Rotate the SolxObject around the Z-axis.
+
+        Args:
+            angle: The rotation angle (in degrees) around the Z-axis.
+
+        Returns:
+            Self for method chaining.
+        """
+        return self.rotate((0.0, 0.0, angle))
+
+    def __add__(self, other: SolxObject) -> SolxObject:
+        """Union operation using + operator.
+
+        Args:
+            other: The SolxObject to union with this object.
+
+        Returns:
+            A new SolxObject representing the union of both objects.
+        """
+        return SolxObject(solid.union()(self.node, other.node))
+
+    def __sub__(self, other: SolxObject) -> SolxObject:
+        """Difference operation using - operator.
+
+        Args:
+            other: The SolxObject to subtract from this object.
+
+        Returns:
+            A new SolxObject representing the difference of both objects.
+        """
+        return SolxObject(solid.difference()(self.node, other.node))

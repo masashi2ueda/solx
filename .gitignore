@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# STL Files (except examples)
+# Large STL files should not be included in pip package
+assets/stl/
+*.stl
+!examples/stl/**/*.stl
+
+# STL出力ディレクトリ
+output_stl/
