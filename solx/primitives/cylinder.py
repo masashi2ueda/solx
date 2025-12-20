@@ -9,7 +9,7 @@ from solx.core import SolxObject
 from solx.primitives.types import CenterType
 
 
-class cylinder(SolxObject):
+class Cylinder(SolxObject):
     """A cylinder primitive for 3D modeling.
 
     This class creates a cylinder with configurable radius, height, and positioning origin.

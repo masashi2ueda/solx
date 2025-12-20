@@ -7,11 +7,12 @@ from typing import Optional
 
 import solid
 
-from solx.core import SolxObject, Vector3D, normalize_vector3d
+from solx.core import SolxObject, Vector3D
 from solx.primitives.types import CenterType
+from solx.primitives.utils import normalize_size_params
 
 
-class cube(SolxObject):
+class Cube(SolxObject):
     """A cube primitive for 3D modeling.
 
     This class creates a cube with configurable size and positioning origin.
@@ -31,10 +32,6 @@ class cube(SolxObject):
         width: Optional[float] = None,
         depth: Optional[float] = None,
         height: Optional[float] = None,
-        position: Optional[Vector3D] = None,
-        x: Optional[float] = None,
-        y: Optional[float] = None,
-        z: Optional[float] = None,
         center: CenterType = CenterType.BOTTOM_CENTER
     ):
         """Create a cube primitive.
@@ -48,54 +45,17 @@ class cube(SolxObject):
                 provided.
             height (float, optional): Height (Z-axis) of the cube. Used if size is not
                 provided.
-            position (Vector3D, optional): Position of the cube. Can be float, tuple,
-                list, or ndarray.
-            x (float, optional): X position of the cube. Used if position is not
-                provided.
-            y (float, optional): Y position of the cube. Used if position is not
-                provided.
-            z (float, optional): Z position of the cube. Used if position is not
-                provided.
             center (CenterType): Center type for positioning the cube.
 
         Raises:
             ValueError: If conflicting parameters are given.
         """
-        # Handle size parameters
-        if size is not None:
-            if any(dim is not None for dim in [width, depth, height]):
-                raise ValueError(
-                    "Cannot specify both 'size' and individual dimensions "
-                    "(width, depth, height)"
-                )
-            size_tuple = normalize_vector3d(size)
-        elif any(dim is not None for dim in [width, depth, height]):
-            if any(dim is None for dim in [width, depth, height]):
-                raise ValueError(
-                    "If using individual dimensions, all of "
-                    "width, depth, and height must be specified"
-                )
-            size_tuple = (float(width), float(depth), float(height))
-        else:
-            # Default to unit cube
-            size_tuple = (1.0, 1.0, 1.0)
-
-        # Handle position parameters
-        if position is not None:
-            if any(pos is not None for pos in [x, y, z]):
-                raise ValueError("Cannot specify both 'position' and individual coordinates (x, y, z)")
-            position_tuple = normalize_vector3d(position)
-        elif any(pos is not None for pos in [x, y, z]):
-            # Use provided coordinates, default missing ones to 0
-            position_tuple = (
-                float(x) if x is not None else 0.0,
-                float(y) if y is not None else 0.0,
-                float(z) if z is not None else 0.0
-            )
-        else:
-            # Default to origin
-            position_tuple = (0.0, 0.0, 0.0)
-
+        size_tuple = normalize_size_params(
+            size=size,
+            width=width,
+            depth=depth,
+            height=height
+        )
         node_cube = solid.cube(size=size_tuple, center=True)
         cube = SolxObject(node_cube)
 
@@ -111,13 +71,8 @@ class cube(SolxObject):
             raise ValueError("Invalid CenterType")
 
         # Apply center translation and position translation
-        total_translation = (
-            center_translation[0] + position_tuple[0],
-            center_translation[1] + position_tuple[1],
-            center_translation[2] + position_tuple[2]
-        )
+        cube = cube.translate(center_translation)
 
-        cube = cube.translate(total_translation)
-
+        self.size_tuple = size_tuple
         super().__init__(cube.node)
 

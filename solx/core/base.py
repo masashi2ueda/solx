@@ -144,6 +144,18 @@ class SolxObject:
         """
         return self.rotate((0.0, 0.0, angle))
 
+    def scale(self, scale_factors: Vector3D) -> SolxObject:
+        """Scale the SolxObject by given factors along each axis.
+
+        Args:
+            scale_factors: The scale factors as a tuple, numpy array, float, or list.
+
+        Returns:
+            Self for method chaining.
+        """
+        normalized_factors = normalize_vector3d(scale_factors)
+        return SolxObject(solid.scale(normalized_factors)(self.node))
+
     def __add__(self, other: SolxObject) -> SolxObject:
         """Union operation using + operator.
 

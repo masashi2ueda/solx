@@ -1,6 +1,6 @@
 # %%
 """Choc v2 switch stem with cross-shaped slots."""
-from solx import CenterType, cube, cylinder
+from solx import CenterType, Cylinder
 
 
 def create_chocv2_stem(inverted=False):
@@ -19,7 +19,7 @@ def create_chocv2_stem(inverted=False):
     """
     # Main stem cylinder
     # Choc v2 stem diameter is approximately 4.0mm, height is about 3.4mm
-    stem_cylinder = cylinder(
+    stem_cylinder = Cylinder(
         radius=2.0,  # 4.0mm diameter
         height=3.4,  # Standard Choc v2 stem height
         center=CenterType.BOTTOM_CENTER
@@ -33,7 +33,7 @@ def create_chocv2_stem(inverted=False):
 
     # Create the two perpendicular rectangular slots for the cross
     # Horizontal slot (along X-axis)
-    horizontal_slot = cube(
+    horizontal_slot = Cube(
         width=slot_length,
         depth=slot_width,
         height=slot_height,
@@ -41,7 +41,7 @@ def create_chocv2_stem(inverted=False):
     )
 
     # Vertical slot (along Y-axis)
-    vertical_slot = cube(
+    vertical_slot = Cube(
         width=slot_width,
         depth=slot_length,
         height=slot_height,

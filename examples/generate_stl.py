@@ -6,7 +6,7 @@ import os
 
 from solx.components.keyboard.stem_chocv2 import create_chocv2_stem
 
-# 出力ディレクトリを作成
+# Create output directory if it doesn't exist
 output_dir = "output_stl"
 os.makedirs(output_dir, exist_ok=True)
 
