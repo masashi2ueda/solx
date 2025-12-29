@@ -1,4 +1,5 @@
 # %%
+"""Docstring for solx.components.keyboard.keycap_top."""
 import solid
 
 from solx import SolxObject
@@ -8,41 +9,22 @@ from solx.primitives.types import CenterType
 SMALL_VAL = 1e-5
 
 
-# def create_keycap_top(
-#     height = 2.0,
-#     bottom_w = 3.0,
-#     bottom_d = 3.0,
-#     bottom_radius = 0.5,
-#     top_w = 2.0,
-#     top_d = 2.0,
-#     top_radius = 0.3,
-#     top_dx = 0.0,
-#     top_dy = 0.1,
-#     top_rx_deg = 5.0,
-#     top_ry_deg = 0.0,
-#     top_rz_deg = 0.0,
-#     dimple = 0.1,
-#     segments = 64,
-#     subt_scale = 0.98,
-# )-> SolxObject:
-
 def create_keycap_base(
-    bottom_w = 15.0,
-    bottom_d = 15.0,
-    top_w = 15.0,
-    top_d = 15.0,
-    height = 2.0,
-
-    bottom_radius = 3,
-    top_radius = 3,
-
-    top_dx = 0.0,
-    top_dy = 0.0,
-    top_rx_deg = 0.0,
-    top_ry_deg = 0.0,
-    top_rz_deg = 0.0,
-    dimple = 0.1,
-    segments = 64)-> SolxObject:
+    bottom_w,
+    bottom_d,
+    top_w,
+    top_d,
+    height,
+    bottom_radius,
+    top_radius,
+    top_dx,
+    top_dy,
+    top_rx_deg,
+    top_ry_deg,
+    top_rz_deg,
+    dimple,
+    segments)-> SolxObject:
+    """Create a basic keycap shape using hull between two rounded cubes."""
     bottom_cube = RoundedCube(
         size=[bottom_w, bottom_d, SMALL_VAL],
         radius=bottom_radius,
@@ -86,11 +68,11 @@ def create_keycap_base(
 
 # %%
 def create_keycap_top(
-    bottom_w = 15.0,
-    bottom_d = 15.0,
-    top_w = 15.0,
-    top_d = 15.0,
-    height = 2.0,
+    bottom_w = 16.0,
+    bottom_d = 16.0,
+    top_w = 16.0,
+    top_d = 16.0,
+    height = 5.0,
     bottom_radius = 3,
     top_radius = 3,
     top_dx = 0.0,
@@ -98,11 +80,34 @@ def create_keycap_top(
     top_rx_deg = 0.0,
     top_ry_deg = 0.0,
     top_rz_deg = 0.0,
-    dimple = 0.1,
+    dimple = 0.0,
     segments = 64,
-    offset_wd = 3,
-    offset_h_ratio = 0.5,
-    ) -> SolxObject:
+    offset_wd = 1,
+    offset_h_ratio = 0.5
+) -> SolxObject:
+    """Create a keycap top with hollow inside.
+
+    Args:
+        bottom_w (float): Width of the bottom face.
+        bottom_d (float): Depth of the bottom face.
+        top_w (float): Width of the top face.
+        top_d (float): Depth of the top face.
+        height (float): Height of the keycap.
+        bottom_radius (float): Radius of the bottom face corners.
+        top_radius (float): Radius of the top face corners.
+        top_dx (float): X offset of the top face.
+        top_dy (float): Y offset of the top face.
+        top_rx_deg (float): Rotation around X axis of the top face in degrees.
+        top_ry_deg (float): Rotation around Y axis of the top face in degrees.
+        top_rz_deg (float): Rotation around Z axis of the top face in degrees.
+        dimple (float): Depth of the dimple on the top face.
+        segments (int): Number of segments for rounded corners.
+        offset_wd (float): Wall thickness of the keycap.
+        offset_h_ratio (float): Ratio of height to offset the inner hollow part.
+
+    Returns:
+        SolxObject: The hollow keycap top object.
+    """
     keycap_outer = create_keycap_base(
         bottom_w = bottom_w,
         bottom_d = bottom_d,

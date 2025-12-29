@@ -2,7 +2,7 @@
 """Choc v2 switch stem with cross-shaped slots."""
 from solx import CenterType, Cube, Cylinder
 
-MGN = 0.24 # 22~24がよい
+MGN = 0.25 # 22~24がよい
 def create_chocv2_stem(inverted=False):
     """Create a Choc v2 switch stem with cross-shaped slots.
 

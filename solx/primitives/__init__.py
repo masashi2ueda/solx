@@ -5,6 +5,7 @@ used across different primitive shapes.
 """
 from .cube import Cube
 from .cylinder import Cylinder
+from .polygon_extlude import PolygonExtrude
 from .rounded_cube import RoundedCube
 from .types import CenterType
 
@@ -13,4 +14,5 @@ __all__ = [
     "Cylinder",
     "CenterType",
     "RoundedCube",
+    "PolygonExtrude",
 ]

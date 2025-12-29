@@ -3,7 +3,7 @@ name = "solx"
 version = "0.1.0"
 dependencies = [
     "solidpython",
-    "viewscad"
+    "viewscad",
 ]
 
 [project.optional-dependencies]
