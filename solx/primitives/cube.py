@@ -56,6 +56,9 @@ class Cube(SolxObject):
             depth=depth,
             height=height
         )
+        self.width = size_tuple[0]
+        self.depth = size_tuple[1]
+        self.height = size_tuple[2]
         node_cube = solid.cube(size=size_tuple, center=True)
         cube = SolxObject(node_cube)
 

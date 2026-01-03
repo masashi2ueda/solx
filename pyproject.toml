@@ -4,6 +4,7 @@ version = "0.1.0"
 dependencies = [
     "solidpython",
     "viewscad",
+    "python-dotenv
 ]
 
 [project.optional-dependencies]

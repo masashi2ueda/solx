@@ -1,7 +1,10 @@
 # %%
-from solx import Cube, PolygonExtrude
+from solx import Cube, Cylinder, PolygonExtrude
+from solx.components.magnet import magnet_cylinder32
+from solx.primitives.types import CenterType
 
-#####################################
+large_val = 10.0
+
 ##### case point layout
 #  ↑y
 # →x
@@ -9,29 +12,73 @@ from solx import Cube, PolygonExtrude
 #  |                     |
 #  |   pt4-----pt5       |
 # pt2--pt3     pt6------pt7
-#
-### bottom case z axis layout
+
+######################################
+# bottom case z axis layout
+######################################
 # xx↕btm_h2(pcb + xiao ble)
 # xxx↕btm_h1(battery space)
 # xxxxxx↕btm_h0
-#
-### bottom case xy axis layout
-#
+btm_h2 = 2.0
+btm_h1 = 10.0
+btm_h0 = 0.5
+
+######################################
+# bottom case xy axis layout
+######################################
 # |←--→| : btm_out_mgn
 # |xxxx|↔|(pcb): btm_pcb_mgn1
 #        |←-→|: btm_pcb_mgn0
 # |xxxxxxxxxx|
 # |xxxxxxxxxxxxxxxxxx
-######################################
-
-large_val = 10.0
-btm_h2 = 8.0
-btm_h1 = 10.0
-btm_h0 = 0.5
-
 btm_out_mgn = 1.0
 btm_pcb_mgn1 = 0.15
 btm_pcb_mgn0 = 1.0
+
+######################################
+# bottom case usb space
+######################################
+#               btm_usb_offset_x
+#               ←-→
+#              |   (   )
+# pcb_left_up →|_________↕ btm_usb_offset_z
+btm_usb_offset_x = 7
+btm_usb_offset_z = 3
+
+######################################
+# bottom case battery space
+######################################
+#               bat_usb_offset_y
+#               ←-→
+#              |   (   )
+# pcb_left_up →|_________↕ bat_usb_offset_z
+######################################
+bat_usb_offset_y = 63
+bat_usb_offset_z = 2
+
+
+######################################
+# top case layout
+#####################################
+#             (top case)
+#             __________________
+#             |oo ______________↨ top_h0
+#             |oo|  _________________
+#    top_h1↨  |oo| |xxxxx(bottom case)
+#              ---↔ btm_top_mgn_xy
+#             <->: top_out_mgn
+top_h0 = 1.0
+top_h1 = 5.0
+btm_top_mgn_xy = 0.15
+top_out_mgn = 3.0
+
+######################################
+# top case around micon
+#####################################
+top_micon_dh = 5.0
+top_micon_dw = 22.0
+top_micon_dd = 25.0
+top_micon_wall = 1.0
 
 # R
 pcb_out_pts_raw = [(189.0, 55.0), (77.0, 55.0), (77.0, 150.0), (118.0, 150.0), (118.0, 121.0), (158.895, 121.0), (158.895, 150.0), (189.0, 150.0)]
@@ -87,40 +134,110 @@ ms_org_pt5x = pcb_out_pts[5][0]
 ms_org_pt5y = pcb_out_pts[5][1]
 ms_org_pt6x = pcb_out_pts[6][0]
 ms_org_pt6y = pcb_out_pts[6][1]
-
-# ms_pt0 = (pcb_out_pts[5][0] + btm_pcb_mgn0, pcb_out_pts[5][1] - btm_out_mgn-btm_pcb_mgn0-btm_pcb_mgn1)
-# ms_pt1 = (pcb_out_pts[5][0] - btm_out_mgn, pcb_out_pts[5][1] - btm_out_mgn-btm_pcb_mgn0-btm_pcb_mgn1)
-# ms_pt2 = (pcb_out_pts[6][0] - btm_out_mgn, pcb_out_pts[6][1] + btm_out_mgn)
-# ms_pt3 = (pcb_out_pts[6][0] + btm_out_mgn, pcb_out_pts[6][1] + btm_out_mgn)
 ms_pt0 = (ms_org_pt5x+btm_pcb_mgn0, ms_org_pt5y+btm_pcb_mgn0)
-# x = ms_pt0[0]
-# y = ms_pt0[1]
-# btm_case += Cube(size=(0.5, 0.5, 30)).translate((x, y, 0))
-
 ms_pt1= (ms_org_pt5x-btm_out_mgn, ms_org_pt5y+btm_pcb_mgn0)
-# x = ms_pt1[0]
-# y = ms_pt1[1]
-# btm_case += Cube(size=(0.5, 0.5, 30)).translate((x, y, 0))
-
 ms_pt2= (ms_org_pt6x-btm_out_mgn, ms_org_pt6y-btm_pcb_mgn0)
-# x = ms_pt2[0]
-# y = ms_pt2[1]
-# btm_case += Cube(size=(0.5, 0.5, 30)).translate((x, y, 0))
-
 ms_pt3 = (ms_org_pt6x+btm_pcb_mgn0, ms_org_pt6y-btm_pcb_mgn0)
-# x = ms_pt3[0]
-# y = ms_pt3[1]
-# btm_case += Cube(size=(0.5, 0.5, 30)).translate((x, y, 0))
-
 btm_case -= PolygonExtrude(
     points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
     height=btm_h2+btm_h1+btm_h0
 )
 
+# # subtract usb space
+# usb_cube_size = (15.0, 7.0, btm_out_mgn + btm_pcb_mgn1 + btm_pcb_mgn0)
+# usb_obj = RoundedCube(size=usb_cube_size, radius=3.0)
+# usb_obj = usb_obj.rotate((90, 0, 0))
+# usb_obj = usb_obj.translate((usb_cube_size[0]/2,0,0))
+# usb_obj = usb_obj.translate((
+#     pcb_out_pts[1][0] + btm_usb_offset_x,
+#     pcb_out_pts[1][1] + btm_out_mgn + 0.1,
+#     btm_h0 + btm_h1 + btm_usb_offset_z
+# ))
+# btm_case -= usb_obj
 
-btm_case.render()
+# # subtract battery space
+# bat_cube_size = (10.0, 5.0, btm_out_mgn + btm_pcb_mgn1 + btm_pcb_mgn0)
+# bat_obj = RoundedCube(size=bat_cube_size, radius=1.0)
+# bat_obj = bat_obj.rotate((90, 0, 0)).rotate((0, 0, 90))
+# bat_obj = bat_obj.translate((0,-bat_cube_size[0]/2,0))
+# bat_obj = bat_obj.translate((
+#     pcb_out_pts[1][0] - btm_out_mgn - 0.1,
+#     pcb_out_pts[1][1] - bat_usb_offset_y,
+#     btm_h0 + btm_h1 + bat_usb_offset_z
+# ))
+# btm_case -= bat_obj
+
+# %%
+# top case
+top_points = shift_pcb_points(
+    pcb_out_pts,
+    btm_out_mgn + btm_top_mgn_xy + top_out_mgn)
+btm_h = btm_h2 + btm_h1 + btm_h0
+top_case = PolygonExtrude(
+    points=top_points,
+    height=btm_h + top_h0
+)
+
+# subtract bottom case space
+sbt_btm_case = PolygonExtrude(
+    points=shift_pcb_points(pcb_out_pts,
+    btm_out_mgn+btm_top_mgn_xy),
+    height=btm_h
+)
+top_case -= sbt_btm_case
+
+# subtract half h
+sbt_btm_case = PolygonExtrude(
+    points=shift_pcb_points(pcb_out_pts,
+    btm_out_mgn+large_val),
+    height=btm_h - top_h1
+)
+top_case -= sbt_btm_case
+
+# around micon
+top_subt_box_w = top_out_mgn + btm_top_mgn_xy
+subt_micon = Cube(
+    size=(
+        top_micon_dw + top_micon_wall + top_out_mgn,
+        top_micon_dd,
+        top_h0 + top_micon_dh
+    ),
+    center=CenterType.BOTTOM_CENTER
+)
+
+top_case.render()
+mag_cylinder = magnet_cylinder32.create_magnet_hole()
+# %%
+dst = btm_case
+dst = top_case
+dst = btm_case + top_case
+only_type = ""
+# only left top
+if only_type == "left_top":
+    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
+    dst -= off_cube.translate((120, -160, 0))
+    dst -= off_cube.translate((50, -250, 0))
+# only left down
+if only_type == "left_down":
+    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
+    dst -= off_cube.translate((110, -160, 0))
+    dst -= off_cube.translate((50, -100, 0))
+dst.render()
+dst_dir_path = "/home/uedam/dev/solx/examples/output_stl"
+dst.save_stl(f"{dst_dir_path}/case.stl")
+
+# %%
 
 
+# %%
+btm_outer_case.render()
+# %%
+
+cube = Cube(size=(10, 10, 10))
+cylinder1 = Cylinder(radius=5, height=10)
+cylinder2 = Cylinder(radius=5, height=10)
+dst = cube + cylinder1.translate((5, 0, 0)) + cylinder2.translate((-5, 0, 0))
+dst.render()
 # %%
 # from solx import Cylinder
 

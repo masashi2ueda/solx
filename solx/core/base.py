@@ -156,6 +156,14 @@ class SolxObject:
         normalized_factors = normalize_vector3d(scale_factors)
         return SolxObject(solid.scale(normalized_factors)(self.node))
 
+    def copy(self) -> SolxObject:
+        """Create a copy of the SolxObject.
+
+        Returns:
+            A new SolxObject that is a copy of this object.
+        """
+        return SolxObject(self.node.copy())
+
     def __add__(self, other: SolxObject) -> SolxObject:
         """Union operation using + operator.
 
@@ -177,3 +185,4 @@ class SolxObject:
             A new SolxObject representing the difference of both objects.
         """
         return SolxObject(solid.difference()(self.node, other.node))
+
