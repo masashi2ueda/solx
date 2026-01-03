@@ -1,9 +1,10 @@
 # %%
-from solx import Cube, Cylinder, PolygonExtrude
+from solx import Cube, Cylinder, HollowCube, PolygonExtrude, RoundedCube
 from solx.components.magnet import magnet_cylinder32
 from solx.primitives.types import CenterType
 
 large_val = 10.0
+min_val = 0.1
 
 ##### case point layout
 #  ↑y
@@ -13,24 +14,10 @@ large_val = 10.0
 #  |   pt4-----pt5       |
 # pt2--pt3     pt6------pt7
 
-######################################
-# bottom case z axis layout
-######################################
-# xx↕btm_h2(pcb + xiao ble)
-# xxx↕btm_h1(battery space)
-# xxxxxx↕btm_h0
 btm_h2 = 2.0
 btm_h1 = 10.0
 btm_h0 = 0.5
 
-######################################
-# bottom case xy axis layout
-######################################
-# |←--→| : btm_out_mgn
-# |xxxx|↔|(pcb): btm_pcb_mgn1
-#        |←-→|: btm_pcb_mgn0
-# |xxxxxxxxxx|
-# |xxxxxxxxxxxxxxxxxx
 btm_out_mgn = 1.0
 btm_pcb_mgn1 = 0.15
 btm_pcb_mgn0 = 1.0
@@ -73,12 +60,30 @@ btm_top_mgn_xy = 0.15
 top_out_mgn = 3.0
 
 ######################################
+# usb
+#####################################
+usb_mgn_x = 5.0
+usb_mgn_z = -2.0
+usb_w = 13.0
+usb_h = 10.0
+
+######################################
 # top case around micon
 #####################################
-top_micon_dh = 5.0
+top_micon_wall = 1.0
+top_micon_dh = max(usb_mgn_z, 0) + usb_h + top_micon_wall * 2
 top_micon_dw = 22.0
 top_micon_dd = 25.0
-top_micon_wall = 1.0
+
+######################################
+# battery switch space
+#####################################
+bat_mgn_x = 26.0
+bat_mgn_z = 0.0
+bat_h = 4.0
+bat_w = 10.0
+bat_d = 5.0
+
 
 # R
 pcb_out_pts_raw = [(189.0, 55.0), (77.0, 55.0), (77.0, 150.0), (118.0, 150.0), (118.0, 121.0), (158.895, 121.0), (158.895, 150.0), (189.0, 150.0)]
@@ -110,6 +115,9 @@ def shift_pcb_points(pts, mgn):
 ##################
 # Invert Y axis
 pcb_out_pts = [(x, -y) for x, y in pcb_out_pts_raw]
+
+pcb_plate = PolygonExtrude(points=pcb_out_pts, height=2)
+pcb_plate = pcb_plate.translate((0, 0, btm_h0 + btm_h1))
 
 # bottom case outer cube
 btm_case = PolygonExtrude(
@@ -143,35 +151,13 @@ btm_case -= PolygonExtrude(
     height=btm_h2+btm_h1+btm_h0
 )
 
-# # subtract usb space
-# usb_cube_size = (15.0, 7.0, btm_out_mgn + btm_pcb_mgn1 + btm_pcb_mgn0)
-# usb_obj = RoundedCube(size=usb_cube_size, radius=3.0)
-# usb_obj = usb_obj.rotate((90, 0, 0))
-# usb_obj = usb_obj.translate((usb_cube_size[0]/2,0,0))
-# usb_obj = usb_obj.translate((
-#     pcb_out_pts[1][0] + btm_usb_offset_x,
-#     pcb_out_pts[1][1] + btm_out_mgn + 0.1,
-#     btm_h0 + btm_h1 + btm_usb_offset_z
-# ))
-# btm_case -= usb_obj
-
-# # subtract battery space
-# bat_cube_size = (10.0, 5.0, btm_out_mgn + btm_pcb_mgn1 + btm_pcb_mgn0)
-# bat_obj = RoundedCube(size=bat_cube_size, radius=1.0)
-# bat_obj = bat_obj.rotate((90, 0, 0)).rotate((0, 0, 90))
-# bat_obj = bat_obj.translate((0,-bat_cube_size[0]/2,0))
-# bat_obj = bat_obj.translate((
-#     pcb_out_pts[1][0] - btm_out_mgn - 0.1,
-#     pcb_out_pts[1][1] - bat_usb_offset_y,
-#     btm_h0 + btm_h1 + bat_usb_offset_z
-# ))
-# btm_case -= bat_obj
+(btm_case + pcb_plate).render()
 
 # %%
 # top case
 top_points = shift_pcb_points(
     pcb_out_pts,
-    btm_out_mgn + btm_top_mgn_xy + top_out_mgn)
+    top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1)
 btm_h = btm_h2 + btm_h1 + btm_h0
 top_case = PolygonExtrude(
     points=top_points,
@@ -181,7 +167,7 @@ top_case = PolygonExtrude(
 # subtract bottom case space
 sbt_btm_case = PolygonExtrude(
     points=shift_pcb_points(pcb_out_pts,
-    btm_out_mgn+btm_top_mgn_xy),
+    btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1),
     height=btm_h
 )
 top_case -= sbt_btm_case
@@ -195,28 +181,68 @@ sbt_btm_case = PolygonExtrude(
 top_case -= sbt_btm_case
 
 # around micon
-top_subt_box_w = top_out_mgn + btm_top_mgn_xy
-subt_micon = Cube(
-    size=(
-        top_micon_dw + top_micon_wall + top_out_mgn,
-        top_micon_dd,
-        top_h0 + top_micon_dh
-    ),
-    center=CenterType.BOTTOM_CENTER
-)
+mcn_dxy = btm_pcb_mgn1 + btm_out_mgn + btm_top_mgn_xy + top_out_mgn
+mcn_org_x = pcb_out_pts[1][0] - mcn_dxy
+mcn_org_y = pcb_out_pts[1][1] + mcn_dxy
+mcn_org_z = btm_h0 + btm_h1 + btm_h2
+mcn_c_dd = top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1 + top_micon_wall
+cw = top_micon_dw + mcn_c_dd
+cd = top_micon_dd + mcn_c_dd
+ch = top_h0 + top_micon_dh
 
+mcn_sbt_box = Cube(size=(cw, cd, ch),center=CenterType.BOTTOM_LEFT)
+mcn_sbt_box = mcn_sbt_box.translate((mcn_org_x,mcn_org_y - cd,mcn_org_z))
+top_case -= mcn_sbt_box
+
+mcn_add_box = HollowCube(
+    size=(cw, cd, ch),
+    wall_thickness=top_micon_wall,
+    d_mz=0, # no bottom wall
+    d_py=top_out_mgn, d_mx = top_out_mgn, # side wall
+    center=CenterType.BOTTOM_LEFT)
+mcn_add_box = mcn_add_box.translate((mcn_org_x,mcn_org_y - cd,mcn_org_z))
+top_case += mcn_add_box
+
+# subtract usb space
+usb_dd = 5
+usb_cube_size = (usb_w, usb_h, top_out_mgn + usb_dd)
+usb_obj = RoundedCube(size=usb_cube_size, radius=3.0)
+usb_obj = usb_obj.rotate((90, 0, 0))
+usb_obj = usb_obj.translate((usb_cube_size[0] / 2, 0, usb_cube_size[1]/2))
+usb_obj = usb_obj.translate((
+    pcb_out_pts[1][0] + usb_mgn_x - 0.0,
+    top_points[1][1] + usb_dd / 2,
+    btm_h0 + btm_h1 + btm_h2 + usb_mgn_z
+))
+top_case -= usb_obj
+# top_case += usb_obj
+
+# # subtract battery space
+# bat_cube_size = (10.0, 5.0, btm_out_mgn + btm_pcb_mgn1 + btm_pcb_mgn0)
+# bat_obj = RoundedCube(size=bat_cube_size, radius=1.0)
+# bat_obj = bat_obj.rotate((90, 0, 0)).rotate((0, 0, 90))
+# bat_obj = bat_obj.translate((0,-bat_cube_size[0]/2,0))
+# bat_obj = bat_obj.translate((
+#     pcb_out_pts[1][0] - btm_out_mgn - 0.1,
+#     pcb_out_pts[1][1] - bat_usb_offset_y,
+#     btm_h0 + btm_h1 + bat_usb_offset_z
+# ))
+# btm_case -= bat_obj
+# top_case += pcb_plate
+# (top_case + pcb_plate).render()
 top_case.render()
 mag_cylinder = magnet_cylinder32.create_magnet_hole()
 # %%
 dst = btm_case
-dst = top_case
-dst = btm_case + top_case
-only_type = ""
+# dst = top_case
+# dst = btm_case + top_case
+# only_type = ""
+only_type = "left_top"
 # only left top
 if only_type == "left_top":
     off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
     dst -= off_cube.translate((120, -160, 0))
-    dst -= off_cube.translate((50, -250, 0))
+    dst -= off_cube.translate((50, -270, 0))
 # only left down
 if only_type == "left_down":
     off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
