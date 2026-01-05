@@ -49,12 +49,13 @@ class HollowCube(SolxObject):
         hollow_cube = cube - subt_cube
 
         if center == CenterType.BOTTOM_CENTER:
-            hollow_cube = hollow_cube.translate(
-                (-cube.width / 2, -cube.depth / 2, 0))
+            trs = (-cube.width / 2, -cube.depth / 2, 0)
+            hollow_cube = hollow_cube.translate(trs)
+            subt_cube = subt_cube.translate(trs)
         elif center == CenterType.CENTER:
-            hollow_cube = hollow_cube.translate(
-                (-cube.width / 2, -cube.depth / 2, -cube.height / 2)
-            )
+            trs = (-cube.width / 2, -cube.depth / 2, -cube.height / 2)
+            hollow_cube = hollow_cube.translate(trs)
+            subt_cube = subt_cube.translate(trs)
         
         self.width = cube.width
         self.depth = cube.depth
@@ -65,6 +66,7 @@ class HollowCube(SolxObject):
         self.d_my = d_my
         self.d_pz = d_pz
         self.d_mz = d_mz
+        self.subt_cube = subt_cube
         super().__init__(hollow_cube.node)
 
 

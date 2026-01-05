@@ -190,36 +190,60 @@ mcn_org_z = btm_h0 + btm_h1 + btm_h2
 cw = top_micon_dw + pcb2topout_xy + top_micon_wall
 cd = top_micon_dd + pcb2topout_xy
 ch = top_h0 + top_micon_dh
-mcn_sbt_box = Cube(size=(cw, cd, ch),center=CenterType.BOTTOM_LEFT)
-mcn_sbt_box = mcn_sbt_box.translate((mcn_org_x, mcn_org_y - cd, mcn_org_z))
-top_case -= mcn_sbt_box
+# mcn_sbt_box = Cube(size=(cw, cd, ch),center=CenterType.BOTTOM_LEFT)
+# mcn_sbt_box = mcn_sbt_box.translate((mcn_org_x, mcn_org_y - cd, mcn_org_z))
+# top_case -= mcn_sbt_box
 mcn_add_box = HollowCube(
     size=(cw, cd, ch),
     wall_thickness=top_micon_wall,
-    d_mz=0, # no bottom wall
+    d_mz=-top_h0, # no bottom wall
     d_py=top_out_mgn, d_mx = top_out_mgn, # side wall
     center=CenterType.BOTTOM_LEFT)
-mcn_add_box = mcn_add_box.translate((mcn_org_x,mcn_org_y - cd,mcn_org_z))
-top_case += mcn_add_box
+trs = (mcn_org_x, mcn_org_y - cd, mcn_org_z)
+top_case += mcn_add_box.translate(trs)
+top_case -= mcn_add_box.subt_cube.translate(trs)
 
-# subtract usb space
-usb_dd = 2
-usb_h = btm2pcbtop + usb_top_z
-usb_cube_size = (
-    usb_w,
-    top_out_mgn + usb_dd,
-    usb_h)
-usb_obj = Cube(size=usb_cube_size, center=CenterType.BOTTOM_CENTER)
-usb_obj = usb_obj.translate((
-    pcb_out_pts[1][0] + usb_cnt_x,
-    top_points[1][1] - usb_cube_size[1]/2 + usb_dd / 2,
-    0
-))
-top_case -= usb_obj
-# top_case -= usb_obj.translate((0, 0, -usb_dd/2))
+# # subtract usb space
+# usb_dd = 2
+# usb_h = btm2pcbtop + usb_top_z
+# usb_cube_size = (
+#     usb_w,
+#     top_out_mgn + usb_dd,
+#     usb_h)
+# usb_obj = Cube(size=usb_cube_size, center=CenterType.BOTTOM_CENTER)
+# usb_obj = usb_obj.translate((
+#     pcb_out_pts[1][0] + usb_cnt_x,
+#     top_points[1][1] - usb_cube_size[1]/2 + usb_dd / 2,
+#     0
+# ))
+# top_case -= usb_obj
 
 
-# # around battery
+# around battery switch
+wt = 1.0
+bsw_d = bat_d
+bsw_w = bat_w + pcb2topout_xy + wt + min_val
+bsw_h = top_h1 + usb_top_z + wt
+org_x = pcb_out_pts[2][0] - pcb2topout_xy + bsw_w / 2 - min_val
+org_y = pcb_out_pts[2][1] + bat_mgn_y
+org_z = btm2pcbtop - top_h1
+bsw_c = Cube(
+    size=(bsw_w, bsw_d, bsw_h),
+    center=CenterType.BOTTOM_CENTER
+).translate((org_x, org_y, org_z))
+top_case -= bsw_c
+
+bsw_c = HollowCube(
+    size=(bsw_w, bsw_d + wt * 2, bsw_h - top_h1),
+    wall_thickness=wt,
+    d_mx = 0, # no left wall
+    d_mz = -top_h0, # no bottom wall
+    center=CenterType.BOTTOM_CENTER
+)
+top_case += bsw_c.translate((org_x, org_y, org_z + top_h1))
+top_case += bsw_c.subt_cube.translate((org_x, org_y, org_z + top_h1))
+# top_case -= sbt_btm_case
+
 # clr = 1.0
 # pcb2out_mgn = top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1
 # bat_cube_w = pcb2out_mgn + bat_w + clr
