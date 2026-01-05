@@ -215,20 +215,19 @@ usb_obj = usb_obj.translate((
 ))
 top_case -= usb_obj
 
-
 # around battery switch
 wt = 1.0
-bsw_d = bat_d
+bsw_d = bat_d + wt * 2
 bsw_w = bat_w + pcb2topout_xy + wt + min_val
-bsw_h = top_h1 + usb_top_z + wt
+bsw_h = bat_mgn_z + wt
 org_x = pcb_out_pts[2][0] - pcb2topout_xy + bsw_w / 2 - min_val
 org_y = pcb_out_pts[2][1] + bat_mgn_y
-org_z = btm2pcbtop - top_h1
+org_z = btm2pcbtop
 bsw_c = HollowCube(
-    size=(bsw_w, bsw_d + wt * 2, bsw_h - top_h1),
+    size=(bsw_w, bsw_d, bsw_h),
     wall_thickness=wt,
     d_mx = 0, # no left wall
-    d_mz = -top_h0, # no bottom wall
+    d_mz = - top_h1, # no bottom wall
     center=CenterType.BOTTOM_CENTER
 )
 trs = (org_x, org_y, org_z)
