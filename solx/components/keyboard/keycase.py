@@ -235,6 +235,40 @@ trs = (org_x, org_y, org_z)
 top_case += bsw_c.translate(trs)
 top_case -= bsw_c.subt_cube.translate(trs)
 
+
+# key switch spae
+def set_swith_diode(index: int, x: float, y: float):
+    global top_case
+    mgn = 0.3
+    key_h = 15.0 + mgn
+    key_w = 15.0 + mgn
+    inner_cube = Cube(size=(key_h, key_w, 100))
+    inner_cube = inner_cube.translate((x, -y, 0))
+    top_case -= inner_cube
+
+offset_x = 200
+offset_y = 100
+set_swith_diode(17, -23.0 + offset_x, -17.0 + offset_y)
+set_swith_diode(18, -23.0 + offset_x, 0.0 + offset_y)
+set_swith_diode(19, -23.0 + offset_x, 17.0 + offset_y)
+set_swith_diode(20, -23.0 + offset_x, 34.0 + offset_y)
+set_swith_diode(13, -40.0 + offset_x, -32.0 + offset_y)
+set_swith_diode(14, -40.0 + offset_x, -15.0 + offset_y)
+set_swith_diode(15, -40.0 + offset_x, 2.0 + offset_y)
+set_swith_diode(9, -57.0 + offset_x, -35.0 + offset_y)
+set_swith_diode(10, -57.0 + offset_x, -18.0 + offset_y)
+set_swith_diode(11, -57.0 + offset_x, -1.0 + offset_y)
+set_swith_diode(5, -74.0 + offset_x, -23.0 + offset_y)
+set_swith_diode(6, -74.0 + offset_x, -6.0 + offset_y)
+set_swith_diode(7, -74.0 + offset_x, 11.0 + offset_y)
+set_swith_diode(1, -91.0 + offset_x, -17.0 + offset_y)
+set_swith_diode(2, -91.0 + offset_x, 0.0 + offset_y)
+set_swith_diode(3, -91.0 + offset_x, 17.0 + offset_y)
+set_swith_diode(4, -108.0 + offset_x, 3.0 + offset_y)
+set_swith_diode(8, -108.0 + offset_x, 20.0 + offset_y)
+set_swith_diode(12, -109.0 + offset_x, 40.0 + offset_y)
+set_swith_diode(16, -92.0 + offset_x, 34.0 + offset_y)
+
 top_case.render()
 mag_cylinder = magnet_cylinder32.create_magnet_hole()
 # %%
