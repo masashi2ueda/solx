@@ -203,20 +203,17 @@ trs = (mcn_org_x, mcn_org_y - cd, mcn_org_z)
 top_case += mcn_add_box.translate(trs)
 top_case -= mcn_add_box.subt_cube.translate(trs)
 
-# # subtract usb space
-# usb_dd = 2
-# usb_h = btm2pcbtop + usb_top_z
-# usb_cube_size = (
-#     usb_w,
-#     top_out_mgn + usb_dd,
-#     usb_h)
-# usb_obj = Cube(size=usb_cube_size, center=CenterType.BOTTOM_CENTER)
-# usb_obj = usb_obj.translate((
-#     pcb_out_pts[1][0] + usb_cnt_x,
-#     top_points[1][1] - usb_cube_size[1]/2 + usb_dd / 2,
-#     0
-# ))
-# top_case -= usb_obj
+# subtract usb space
+usb_dd = 2
+usb_h = btm2pcbtop + usb_top_z
+usb_cube_size = (usb_w, top_out_mgn + usb_dd, usb_h)
+usb_obj = Cube(size=usb_cube_size, center=CenterType.BOTTOM_CENTER)
+usb_obj = usb_obj.translate((
+    pcb_out_pts[1][0] + usb_cnt_x,
+    top_points[1][1] - usb_cube_size[1]/2 + usb_dd / 2,
+    0
+))
+top_case -= usb_obj
 
 
 # around battery switch
@@ -227,12 +224,6 @@ bsw_h = top_h1 + usb_top_z + wt
 org_x = pcb_out_pts[2][0] - pcb2topout_xy + bsw_w / 2 - min_val
 org_y = pcb_out_pts[2][1] + bat_mgn_y
 org_z = btm2pcbtop - top_h1
-bsw_c = Cube(
-    size=(bsw_w, bsw_d, bsw_h),
-    center=CenterType.BOTTOM_CENTER
-).translate((org_x, org_y, org_z))
-top_case -= bsw_c
-
 bsw_c = HollowCube(
     size=(bsw_w, bsw_d + wt * 2, bsw_h - top_h1),
     wall_thickness=wt,
@@ -240,33 +231,10 @@ bsw_c = HollowCube(
     d_mz = -top_h0, # no bottom wall
     center=CenterType.BOTTOM_CENTER
 )
-top_case += bsw_c.translate((org_x, org_y, org_z + top_h1))
-top_case += bsw_c.subt_cube.translate((org_x, org_y, org_z + top_h1))
-# top_case -= sbt_btm_case
+trs = (org_x, org_y, org_z)
+top_case += bsw_c.translate(trs)
+top_case -= bsw_c.subt_cube.translate(trs)
 
-# clr = 1.0
-# pcb2out_mgn = top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1
-# bat_cube_w = pcb2out_mgn + bat_w + clr
-# bat_cube_d = bat_d + clr * 2
-# bat_cube_h = bat_mgn_z + bat_h / 2 + clr
-# bat_sbt_cube = Cube(size=(bat_cube_w, bat_cube_d, bat_cube_h), center=CenterType.BOTTOM_CENTER)
-# bat_org_x = pcb_out_pts[2][0] - pcb2out_mgn
-# bat_org_y = pcb_out_pts[2][1] + bat_mgn_y
-# top_case += bat_sbt_cube
-
-# # subtract battery space
-# bat_cube_size = (10.0, 5.0, btm_out_mgn + btm_pcb_mgn1 + btm_pcb_mgn0)
-# bat_obj = RoundedCube(size=bat_cube_size, radius=1.0)
-# bat_obj = bat_obj.rotate((90, 0, 0)).rotate((0, 0, 90))
-# bat_obj = bat_obj.translate((0,-bat_cube_size[0]/2,0))
-# bat_obj = bat_obj.translate((
-#     pcb_out_pts[1][0] - btm_out_mgn - 0.1,
-#     pcb_out_pts[1][1] - bat_usb_offset_y,
-#     btm_h0 + btm_h1 + bat_usb_offset_z
-# ))
-# btm_case -= bat_obj
-# top_case += pcb_plate
-# (top_case + pcb_plate).render()
 top_case.render()
 mag_cylinder = magnet_cylinder32.create_magnet_hole()
 # %%
