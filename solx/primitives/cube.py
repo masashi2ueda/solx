@@ -8,7 +8,7 @@ from __future__ import annotations
 import solid
 from solid.objects import OpenSCADObject
 
-from solx.core import Point3D, SolxObject, Vec3
+from solx.core import Point3D, SolxObject, Vec3, param_apply
 from solx.primitives.types import CenterType
 
 
@@ -17,6 +17,8 @@ class Cube(SolxObject):
         self,
         size: Vec3 = (1, 1, 1),
         center: CenterType = CenterType.BOTTOM_CENTER,
+        node: OpenSCADObject = None,
+        pts: list[Point3D] = None
     ):
         """Create a cube primitive.
         Args:
@@ -25,14 +27,18 @@ class Cube(SolxObject):
                 Defaults to CenterType.BOTTOM_CENTER.
         Note:
             Cube vertex labeling:
-             p4---p5
+             p7---p6
              /   /
-            p7---p6
+            p4---p5
 
-             p0---p1
+             p3---p2
              /   /
-            p3---p2
+            p0---p1
         """
+        if node is not None and pts is not None:
+            super().__init__(openscad_node=node)
+            self.pts = pts
+            return
         w, d, h = size
         base_cube = SolxObject(openscad_node=solid.cube(size=size, center=True))
         pts = [
@@ -76,38 +82,22 @@ class Cube(SolxObject):
         cz = (self.pts[0].z + self.pts[4].z) / 2
         return Point3D(cx, cy, cz)
 
-    @classmethod
-    def _from_params(cls, openscad_node: OpenSCADObject, pts: list[Point3D]) -> Cube:
-        cube = cls.__new__(cls)
-        super(Cube, cube).__init__(openscad_node=openscad_node)
-        cube.pts = pts
-        return cube
-    
-    def _param_apply(self, func_name, params) -> Cube:
-        pts = [pt._param_apply(func_name, params) for pt in self.pts]
-        cube = super()._param_apply(func_name, params)
-        dst_cube = Cube._from_params(openscad_node=cube.node, pts=pts)
-        return dst_cube
-
-    def translate(self, translation_vector: Vec3) -> Cube:
-        return self._param_apply('translate', translation_vector)
-    def rotate(self, rotation_angles: Vec3) -> Cube:
-        return self._param_apply('rotate', rotation_angles)
-    def scale(self, scale_factors: Vec3) -> Cube:
-        return self._param_apply('scale', scale_factors)
+    def param_apply(self, func_name: str, params: Vec3) -> Cube:
+        node = param_apply(func_name, params, self.node)
+        pts = [param_apply(func_name, params, pt) for pt in self.pts]
+        return Cube(node=node, pts=pts)
 
 
 if __name__ == "__main__":
-    cube = Cube(size=(10, 20, 30), center=CenterType.BOTTOM_LEFT)
-    cube = cube.translate((5, 5, 0))
+    taobj = Cube(size=(10, 20, 30), center=CenterType.BOTTOM_LEFT)
+    taobj = taobj.translate((10, 20, 30))
+    taobj = taobj.rotate((10, 20, 30))
+    taobj = taobj.scale((1.5, 2.0, 2.5))
 
-    cube.render()
-
-    pts = None
-    for i, pt in enumerate(cube.pts):
-        pt_cube = Cube(size=(1, 1, 1+i*0.1), center=CenterType.CENTER)
-        pt_cube = pt_cube.translate(pt.to_tuple())
-        pts = pt_cube if pts is None else pts + pt_cube
-    pts.render()
+    dst = taobj.copy()
+    for i, pt in enumerate(taobj.pts):
+        pt_cube = Cube(size=(1, 1, 5), center=CenterType.CENTER).translate(pt.to_tuple())
+        dst += pt_cube
+    dst.render()
 
 # %%

@@ -5,6 +5,9 @@ SolidPython/OpenSCAD nodes with additional utility methods and transforms.
 """
 from __future__ import annotations
 
+import copy
+from typing import Self
+
 import numpy as np
 import solid
 from solid.objects import OpenSCADObject
@@ -17,16 +20,20 @@ _renderer = Renderer(openscad_path=get_openscad_path())
 
 Vec3 = tuple[float, float, float]
 
-
-def node_manipulate(node: OpenSCADObject, func_name: str, params: Vec3) -> OpenSCADObject:
-    if func_name == 'translate':
-        return solid.translate(params)(node)
-    elif func_name == 'rotate':
-        return solid.rotate(params)(node)
-    elif func_name == 'scale':
-        return solid.scale(params)(node)
+def param_apply(func_name: str, params: Vec3, target: OpenSCADObject|Point3D) -> OpenSCADObject|Point3D:
+    if isinstance(target, OpenSCADObject):
+        if func_name == 'translate':
+            return solid.translate(params)(target)
+        elif func_name == 'rotate':
+            return solid.rotate(params)(target)
+        elif func_name == 'scale':
+            return solid.scale(params)(target)
+        else:
+            raise ValueError(f"Unknown function name: {func_name}")
+    elif isinstance(target, Point3D):
+        return target._param_apply(func_name, params)
     else:
-        raise ValueError(f"Unknown function name: {func_name}")
+        raise ValueError("Target must be OpenSCADObject or Point3D")
 
 
 class Point3D:
@@ -122,21 +129,33 @@ class SolxObject:
         _renderer.render(self.node, outfile=path)
 
     def _param_apply(self, func_name: str, params: Vec3) -> SolxObject:
-        return SolxObject(node_manipulate(self.node, func_name, params))
-    def translate(self, translation_vector: Vec3) -> SolxObject:
-        return self._param_apply('translate', translation_vector)
-    def rotate(self, rotation_angles: Vec3) -> SolxObject:
-        return self._param_apply('rotate', rotation_angles)
-    def scale(self, scale_factors: Vec3) -> SolxObject:
-        return self._param_apply('scale', scale_factors)
+        if func_name == 'translate':
+            return SolxObject(openscad_node=solid.translate(params)(self.node))
+        elif func_name == 'rotate':
+            return SolxObject(openscad_node=solid.rotate(params)(self.node))
+        elif func_name == 'scale':
+            return SolxObject(openscad_node=solid.scale(params)(self.node))
+        else:
+            raise ValueError(f"Unknown function name: {func_name}")
 
-    def copy(self) -> SolxObject:
+    def param_apply(self, func_name: str, params: Vec3) -> SolxObject:
+        node = param_apply(func_name, params, self.node)
+        return SolxObject(openscad_node=node)
+
+    def translate(self, translation_vector: Vec3) -> Self:
+        return self.param_apply('translate', translation_vector)
+    def rotate(self, rotation_angles: Vec3) -> Self:
+        return self.param_apply('rotate', rotation_angles)
+    def scale(self, scale_factors: Vec3) -> Self:
+        return self.param_apply('scale', scale_factors)
+
+    def copy(self) -> Self:
         """Create a copy of the SolxObject.
 
         Returns:
             A new SolxObject that is a copy of this object.
         """
-        return SolxObject(self.node.copy())
+        return copy.deepcopy(self)
 
     def __add__(self, other: SolxObject) -> SolxObject:
         """Union operation using + operator.

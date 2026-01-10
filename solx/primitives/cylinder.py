@@ -3,49 +3,39 @@
 This module provides a cylinder primitive with configurable positioning origins.
 """
 # %%
-import solid
+from __future__ import annotations
 
-from solx.core import SolxObject
+import solid
+from solid.objects import OpenSCADObject
+
+from solx.core import Point3D, SolxObject, Vec3, param_apply
 from solx.primitives.types import CenterType
 
 
 class Cylinder(SolxObject):
-    """A cylinder primitive for 3D modeling.
-
-    This class creates a cylinder with configurable radius, height, and positioning origin.
-    The cylinder can be positioned with different origin types such as bottom center,
-    geometric center, or bottom left corner.
-
-    Attributes:
-        radius (float): Radius of the cylinder.
-        height (float): Height of the cylinder.
-        center (CenterType): Center type for positioning the cylinder.
-    """
-
     def __init__(
         self,
         radius: float = 1.0,
         height: float = 1.0,
         center: CenterType = CenterType.BOTTOM_CENTER,
-        segments: int = 32
+        segments: int = 32,
+        node: OpenSCADObject = None,
+        pts: list[Point3D] = None
     ):
-        """Create a cylinder primitive.
-
-        Args:
-            radius (float, optional): Radius of the cylinder. Defaults to 1.0.
-            height (float, optional): Height of the cylinder. Defaults to 1.0.
-            center (CenterType, optional): Center type for positioning the cylinder. Defaults to CenterType.BOTTOM_CENTER.
-            segments (int, optional): Number of segments to approximate the cylinder. Defaults to 32.
-
-        Returns:
-            SolxObject: A cylinder object positioned according to the specified origin type.
-        """
+        if node is not None and pts is not None:
+            super().__init__(openscad_node=node)
+            self.pts = pts
+            return
         node_cylinder = solid.cylinder(
             r=radius,
             h=height,
             center=True,
             segments=segments)
         cyl = SolxObject(node_cylinder)
+        pts = [
+            Point3D(0, 0, -height / 2),  # Bottom center
+            Point3D(0, 0, height / 2),   # Top center
+        ]
 
         if center == CenterType.BOTTOM_CENTER:
             translation = (0, 0, height / 2)
@@ -57,5 +47,32 @@ class Cylinder(SolxObject):
             raise ValueError("Invalid CenterType")
 
         cyl = cyl.translate(translation)
+        pts = [pt.translate(translation) for pt in pts]
 
         super().__init__(cyl.node)
+        self.pts = pts
+    @property
+    def bottom_center(self) -> Point3D:
+        return self.pts[0]
+    @property
+    def top_center(self) -> Point3D:
+        return self.pts[1]
+    
+    def param_apply(self, func_name: str, params: Vec3) -> Cylinder:
+        node = param_apply(func_name, params, self.node)
+        pts = [param_apply(func_name, params, pt) for pt in self.pts]
+        return Cylinder(node=node, pts=pts)
+
+if __name__ == "__main__":
+    from solx.primitives.cube import Cube
+    taobj = Cylinder(radius=10, height=20, center=CenterType.BOTTOM_LEFT)
+    taobj = taobj.translate((10, 20, 30))
+    taobj = taobj.rotate((10, 20, 30))
+    taobj = taobj.scale((1.5, 2.0, 2.5))
+
+    dst = taobj.copy()
+    for i, pt in enumerate(taobj.pts):
+        pt_cube = Cube(size=(1, 1, 5), center=CenterType.CENTER).translate(pt.to_tuple())
+        dst += pt_cube
+    dst.render()
+# %%
