@@ -4,10 +4,14 @@
 This module provides the PolygonExtrude class for creating 3D objects by extruding
 2D polygon shapes along the Z-axis using the SolidPython library.
 """
+# %%
+from __future__ import annotations
+
+import copy
 
 import solid
 
-from solx.core import SolxObject
+from solx.core import Point3D, SolxObject, Vec3, param_apply
 
 
 class PolygonExtrude(SolxObject):
@@ -40,3 +44,32 @@ class PolygonExtrude(SolxObject):
             solid.polygon(points=points)
         )
         super().__init__(node_extrude)
+        self.h = height
+        self.top_pts = [Point3D(x, y, height) for x, y in points]
+        self.bottom_pts = [Point3D(x, y, 0) for x, y in points]
+
+    def param_apply(self, func_name: str, params: Vec3) -> PolygonExtrude:
+        dst = copy.deepcopy(self)
+        dst.node = param_apply(func_name, params, self.node)
+        dst.top_pts = [param_apply(func_name, params, pt) for pt in self.top_pts]
+        dst.bottom_pts = [param_apply(func_name, params, pt) for pt in self.bottom_pts]
+        return dst
+
+if __name__ == "__main__":
+    from solx.primitives.cube import Cube
+    from solx.primitives.types import CenterType
+    taobj = PolygonExtrude(points=[(0,0), (10,0), (10,20), (5,20), (3, 8)], height=10)
+    taobj = taobj.translate((10, 20, 30))
+    taobj = taobj.rotate((10, 20, 30))
+    taobj = taobj.scale((1.5, 2.0, 2.5))
+    c = Cube(size=(2, 2, 2), center=CenterType.BOTTOM_CENTER)
+    taobj += c
+    c = Cube(size=(1, 1, 1), center=CenterType.BOTTOM_CENTER)
+    taobj -= c
+    dst = taobj.copy()
+    pts = taobj.bottom_pts + taobj.top_pts
+    for i, pt in enumerate(pts):
+        pt_cube = Cube(size=(1, 1, 5), center=CenterType.CENTER).translate(pt.to_tuple())
+        dst += pt_cube
+    dst.render()
+# %%

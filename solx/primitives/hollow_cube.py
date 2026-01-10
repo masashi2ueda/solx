@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 
-from solx.core import Vec3, param_apply
+from solx.core import Vec3
 from solx.primitives.cube import Cube
 from solx.primitives.types import CenterType, DefautltCenterType
 
@@ -63,13 +63,9 @@ class HollowCube(Cube):
         super()._init(node=hollow_cube.node, pts=hollow_cube.pts)
 
     def param_apply(self, func_name: str, params: Vec3) -> HollowCube:
-        node = param_apply(func_name, params, self.node)
-        pts = [param_apply(func_name, params, pt) for pt in self.pts]
-        subt_cube = self.subt_cube.param_apply(func_name, params)
         dst = copy.deepcopy(self)
-        dst.node = node
-        dst.pts = pts
-        dst.subt_cube = subt_cube
+        dst = dst.cube_param_apply(func_name, params)
+        dst.subt_cube = self.subt_cube.param_apply(func_name, params)
         return dst
 
 

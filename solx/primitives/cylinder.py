@@ -5,6 +5,8 @@ This module provides a cylinder primitive with configurable positioning origins.
 # %%
 from __future__ import annotations
 
+import copy
+
 import solid
 
 from solx.core import Point3D, SolxObject, Vec3, param_apply
@@ -52,11 +54,9 @@ class Cylinder(SolxObject):
         return self.pts[1]
     
     def param_apply(self, func_name: str, params: Vec3) -> Cylinder:
-        node = param_apply(func_name, params, self.node)
-        pts = [param_apply(func_name, params, pt) for pt in self.pts]
-        dst = Cylinder.__new__(Cylinder)
-        dst.node = node
-        dst.pts = pts
+        dst = copy.deepcopy(self)
+        dst.node = param_apply(func_name, params, self.node)
+        dst.pts = [param_apply(func_name, params, pt) for pt in self.pts]
         return dst
 
 

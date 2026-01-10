@@ -5,6 +5,9 @@ This module provides a cube primitive with configurable positioning origins.
 # %%
 from __future__ import annotations
 
+import copy
+from typing import Self
+
 import solid
 
 from solx.core import Point3D, SolxObject, Vec3, param_apply
@@ -91,12 +94,15 @@ class Cube(SolxObject):
         dst._init(node=node, pts=pts)
         return dst
 
+    def cube_param_apply(self, func_name: str, params: Vec3) -> Self:
+        dst = copy.deepcopy(self)
+        dst.node = param_apply(func_name, params, self.node)
+        dst.pts = [param_apply(func_name, params, pt) for pt in self.pts]
+        return dst
+
 
     def param_apply(self, func_name: str, params: Vec3) -> Cube:
-        node = param_apply(func_name, params, self.node)
-        pts = [param_apply(func_name, params, pt) for pt in self.pts]
-        dst = Cube.create(node=node, pts=pts)
-        return dst
+        return self.cube_param_apply(func_name, params)
 
 
 if __name__ == "__main__":

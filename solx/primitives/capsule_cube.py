@@ -9,9 +9,11 @@ and segment counts for smooth edge approximation.
 # %%
 from __future__ import annotations
 
+import copy
+
 from solid.objects import OpenSCADObject
 
-from solx.core import Point3D, Vec3, param_apply
+from solx.core import Point3D, Vec3
 from solx.primitives.cube import Cube
 from solx.primitives.cylinder import Cylinder
 from solx.primitives.types import CenterType, DefautltCenterType
@@ -58,12 +60,8 @@ class CapsuleCube(Cube):
         self.r = r
 
     def param_apply(self, func_name: str, params: Vec3) -> CapsuleCube:
-        node: OpenSCADObject = param_apply(func_name, params, self.node)
-        pts: list[Point3D] = [param_apply(func_name, params, pt) for pt in self.pts]
-        dst = CapsuleCube.__new__(CapsuleCube)
-        dst.node = node
-        dst.pts = pts
-        dst.r = self.r
+        dst = copy.deepcopy(self)
+        dst = dst.cube_param_apply(func_name, params)
         return dst
 
 
