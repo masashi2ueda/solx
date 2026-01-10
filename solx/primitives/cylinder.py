@@ -6,7 +6,6 @@ This module provides a cylinder primitive with configurable positioning origins.
 from __future__ import annotations
 
 import solid
-from solid.objects import OpenSCADObject
 
 from solx.core import Point3D, SolxObject, Vec3, param_apply
 from solx.primitives.types import CenterType
@@ -19,13 +18,7 @@ class Cylinder(SolxObject):
         height: float = 1.0,
         center: CenterType = CenterType.BOTTOM_CENTER,
         segments: int = 32,
-        node: OpenSCADObject = None,
-        pts: list[Point3D] = None
     ):
-        if node is not None and pts is not None:
-            super().__init__(openscad_node=node)
-            self.pts = pts
-            return
         node_cylinder = solid.cylinder(
             r=radius,
             h=height,
@@ -61,7 +54,11 @@ class Cylinder(SolxObject):
     def param_apply(self, func_name: str, params: Vec3) -> Cylinder:
         node = param_apply(func_name, params, self.node)
         pts = [param_apply(func_name, params, pt) for pt in self.pts]
-        return Cylinder(node=node, pts=pts)
+        dst = Cylinder.__new__(Cylinder)
+        dst.node = node
+        dst.pts = pts
+        return dst
+
 
 if __name__ == "__main__":
     from solx.primitives.cube import Cube

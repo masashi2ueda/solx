@@ -6,7 +6,6 @@ This module provides a cube primitive with configurable positioning origins.
 from __future__ import annotations
 
 import solid
-from solid.objects import OpenSCADObject
 
 from solx.core import Point3D, SolxObject, Vec3, param_apply
 from solx.primitives.types import CenterType, DefautltCenterType
@@ -17,8 +16,6 @@ class Cube(SolxObject):
         self,
         size: Vec3 = (1, 1, 1),
         center: CenterType = DefautltCenterType,
-        node: OpenSCADObject | None = None,
-        pts: list[Point3D] | None = None
     ):
         """Create a cube primitive.
         Args:
@@ -35,10 +32,6 @@ class Cube(SolxObject):
              /   /
             p0---p1
         """
-        if node is not None and pts is not None:
-            super().__init__(openscad_node=node)
-            self.pts = pts
-            return
         w, d, h = size
         base_cube = SolxObject(openscad_node=solid.cube(size=size, center=True))
         pts = self.create_pts(size=size)
@@ -88,10 +81,22 @@ class Cube(SolxObject):
         cz = (self.pts[0].z + self.pts[4].z) / 2
         return Point3D(cx, cy, cz)
 
+    def _init(self, node: solid.OpenSCADObject, pts: list[Point3D]) -> None:
+        self.node = node
+        self.pts = pts
+
+    @classmethod
+    def create(cls, node: solid.OpenSCADObject, pts: list[Point3D]) -> Cube:
+        dst = Cube.__new__(Cube)
+        dst._init(node=node, pts=pts)
+        return dst
+
+
     def param_apply(self, func_name: str, params: Vec3) -> Cube:
         node = param_apply(func_name, params, self.node)
         pts = [param_apply(func_name, params, pt) for pt in self.pts]
-        return Cube(node=node, pts=pts)
+        dst = Cube.create(node=node, pts=pts)
+        return dst
 
 
 if __name__ == "__main__":

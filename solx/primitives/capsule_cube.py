@@ -17,7 +17,6 @@ from solx.primitives.cylinder import Cylinder
 from solx.primitives.types import CenterType, DefautltCenterType
 
 
-# %%
 class CapsuleCube(Cube):
     pts: list[Point3D]
     node: OpenSCADObject
@@ -27,15 +26,7 @@ class CapsuleCube(Cube):
         size: Vec3 = (1, 1, 1),
         center: CenterType = DefautltCenterType,
         segments: int = 32,
-        node: OpenSCADObject = None,
-        pts: list[Point3D] = None,
-        r: float = None
     ):
-        if node is not None:
-            super().__init__(node=node, pts=pts)
-            self.r = r
-            return
-
         # create cube
         w = size[0]
         d = size[1]
@@ -63,13 +54,16 @@ class CapsuleCube(Cube):
         cube = cube.translate(trans_vec)
         pts = [pt.translate(trans_vec) for pt in pts]
 
-        super().__init__(node=cube.node, pts=pts)
+        super()._init(node=cube.node, pts=pts)
         self.r = r
 
     def param_apply(self, func_name: str, params: Vec3) -> CapsuleCube:
         node: OpenSCADObject = param_apply(func_name, params, self.node)
         pts: list[Point3D] = [param_apply(func_name, params, pt) for pt in self.pts]
-        dst = CapsuleCube(node=node, pts=pts, r=self.r)
+        dst = CapsuleCube.__new__(CapsuleCube)
+        dst.node = node
+        dst.pts = pts
+        dst.r = self.r
         return dst
 
 
