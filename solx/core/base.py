@@ -97,13 +97,22 @@ class SolxObject:
 
     def __init__(
         self,
-        openscad_node: OpenSCADObject) -> None:
+        openscad_node: OpenSCADObject=None,
+        params: list[OpenSCADObject]=None
+        ) -> None:
         """Initialize SolxObject with a SolidPython node.
 
         Args:
             openscad_node: The SolidPython/OpenSCAD node to wrap.
         """
+        if params is not None:
+            self.node = params[0]
+            return
         self.node = openscad_node
+
+    @property
+    def all_params(self) -> list[OpenSCADObject]:
+        return [self.node]
 
     def render(self) -> None:
         """Render the SolxObject using ViewSCAD Renderer.
@@ -150,32 +159,24 @@ class SolxObject:
         return self.param_apply('scale', scale_factors)
 
     def copy(self) -> Self:
-        """Create a copy of the SolxObject.
-
-        Returns:
-            A new SolxObject that is a copy of this object.
-        """
         return copy.deepcopy(self)
+    
+    def other_param_apply(self, func_name: str, other: SolxObject) -> Self:
+        dst = self.copy()
+        src_node = self.node
+        other_node = other.node
+        dst_node = None
+        if func_name == 'union':
+            dst_node = solid.union()(src_node, other_node)
+        elif func_name == 'difference':
+            dst_node = solid.difference()(src_node, other_node)
+        else:
+            raise ValueError(f"Unknown function name: {func_name}")
+        dst.node = dst_node
+        return dst
 
-    def __add__(self, other: SolxObject) -> SolxObject:
-        """Union operation using + operator.
-
-        Args:
-            other: The SolxObject to union with this object.
-
-        Returns:
-            A new SolxObject representing the union of both objects.
-        """
-        return SolxObject(solid.union()(self.node, other.node))
+    def __add__(self, other: SolxObject) -> Self:
+        return self.other_param_apply('union', other)
 
     def __sub__(self, other: SolxObject) -> SolxObject:
-        """Difference operation using - operator.
-
-        Args:
-            other: The SolxObject to subtract from this object.
-
-        Returns:
-            A new SolxObject representing the difference of both objects.
-        """
-        return SolxObject(solid.difference()(self.node, other.node))
-
+        return self.other_param_apply('difference', other)

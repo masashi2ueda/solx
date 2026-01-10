@@ -93,7 +93,10 @@ if __name__ == "__main__":
     taobj = taobj.translate((10, 20, 30))
     taobj = taobj.rotate((10, 20, 30))
     taobj = taobj.scale((1.5, 2.0, 2.5))
-
+    c = Cube(size=(2, 2, 2), center=CenterType.BOTTOM_CENTER)
+    taobj += c
+    c = Cube(size=(1, 1, 1), center=CenterType.BOTTOM_CENTER)
+    taobj -= c
     dst = taobj.copy()
     for i, pt in enumerate(taobj.pts):
         pt_cube = Cube(size=(1, 1, 5), center=CenterType.CENTER).translate(pt.to_tuple())
