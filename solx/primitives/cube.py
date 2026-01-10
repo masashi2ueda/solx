@@ -9,16 +9,16 @@ import solid
 from solid.objects import OpenSCADObject
 
 from solx.core import Point3D, SolxObject, Vec3, param_apply
-from solx.primitives.types import CenterType
+from solx.primitives.types import CenterType, DefautltCenterType
 
 
 class Cube(SolxObject):
     def __init__(
         self,
         size: Vec3 = (1, 1, 1),
-        center: CenterType = CenterType.BOTTOM_CENTER,
-        node: OpenSCADObject = None,
-        pts: list[Point3D] = None
+        center: CenterType = DefautltCenterType,
+        node: OpenSCADObject | None = None,
+        pts: list[Point3D] | None = None
     ):
         """Create a cube primitive.
         Args:
@@ -41,16 +41,7 @@ class Cube(SolxObject):
             return
         w, d, h = size
         base_cube = SolxObject(openscad_node=solid.cube(size=size, center=True))
-        pts = [
-            Point3D(-w / 2, -d / 2, -h / 2),  # p0
-            Point3D( w / 2, -d / 2, -h / 2),  # p1
-            Point3D( w / 2,  d / 2, -h / 2),  # p2
-            Point3D(-w / 2,  d / 2, -h / 2),  # p3
-            Point3D(-w / 2, -d / 2,  h / 2),  # p4
-            Point3D( w / 2, -d / 2,  h / 2),  # p5
-            Point3D( w / 2,  d / 2,  h / 2),  # p6
-            Point3D(-w / 2,  d / 2,  h / 2),  # p7
-        ]
+        pts = self.create_pts(size=size)
         if center == CenterType.BOTTOM_CENTER:
             center_translation = (0, 0, h / 2)
         elif center == CenterType.CENTER:
@@ -63,6 +54,21 @@ class Cube(SolxObject):
         super().__init__(openscad_node=base_cube.node)
         self.pts = pts
     
+    @staticmethod
+    def create_pts(size: Vec3) -> list[Point3D]:
+        w, d, h = size
+        pts = [
+            Point3D(-w / 2, -d / 2, -h / 2),  # p0
+            Point3D( w / 2, -d / 2, -h / 2),  # p1
+            Point3D( w / 2,  d / 2, -h / 2),  # p2
+            Point3D(-w / 2,  d / 2, -h / 2),  # p3
+            Point3D(-w / 2, -d / 2,  h / 2),  # p4
+            Point3D( w / 2, -d / 2,  h / 2),  # p5
+            Point3D( w / 2,  d / 2,  h / 2),  # p6
+            Point3D(-w / 2,  d / 2,  h / 2),  # p7
+        ]
+        return pts
+
     @property
     def w(self) -> float:
         return self.pts[1].distance_to(self.pts[0])

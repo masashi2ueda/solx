@@ -7,39 +7,85 @@ and segment counts for smooth edge approximation.
 """
 
 # %%
-from solx.core.base import SolxObject, Vec3
+from __future__ import annotations
+
+from solid.objects import OpenSCADObject
+
+from solx.core import Point3D, Vec3, param_apply
 from solx.primitives.cube import Cube
 from solx.primitives.cylinder import Cylinder
-from solx.primitives.types import CenterType
+from solx.primitives.types import CenterType, DefautltCenterType
 
 
 # %%
-class CapsuleCube(SolxObject):
-    def __init__(self,
-        size: Vec3,
+class CapsuleCube(Cube):
+    pts: list[Point3D]
+    node: OpenSCADObject
+    r: float
+    def __init__(
+        self,
+        size: Vec3 = (1, 1, 1),
+        center: CenterType = DefautltCenterType,
         segments: int = 32,
-        center: CenterType = CenterType.BOTTOM_CENTER
+        node: OpenSCADObject = None,
+        pts: list[Point3D] = None,
+        r: float = None
     ):
+        if node is not None:
+            super().__init__(node=node, pts=pts)
+            self.r = r
+            return
+
+        # create cube
         w = size[0]
         d = size[1]
         h = size[2]
 
-        cyl = Cylinder(radius=d / 2, height=h, center=CenterType.BOTTOM_CENTER, segments=segments)
-        cube = Cube(size=(w - d * 2, d, h), center=CenterType.BOTTOM_CENTER)
-        dx = (w - 2 * d) / 2
-        capsule_cube = cube + cyl.translate((-dx, 0, 0)) + cyl.translate((dx, 0, 0))
+        # create cube
+        cube = Cube(size=(w - d, d, h), center=CenterType.BOTTOM_CENTER)
+
+        r = d / 2
+        cyl = Cylinder(radius=r, height=h, center=CenterType.BOTTOM_CENTER, segments=segments)
+        dx = w / 2 - r
+        cube += cyl.translate((-dx, 0, 0))
+        cube += cyl.translate((dx, 0, 0))
+
+        pts = Cube.create_pts(size=size)
+        pts = [pt.translate((0, 0, h / 2)) for pt in pts]
+
+        trans_vec = (0, 0, 0)
         if center == CenterType.BOTTOM_CENTER:
             pass
         if center == CenterType.CENTER:
-            capsule_cube = capsule_cube.translate((0, 0, -h / 2))
+            trans_vec = (0, 0, -h / 2)
         if center == CenterType.BOTTOM_LEFT:
-            capsule_cube = capsule_cube.translate((w / 2, d / 2, 0))
+            trans_vec = (w / 2, d / 2, 0)
+        cube = cube.translate(trans_vec)
+        pts = [pt.translate(trans_vec) for pt in pts]
 
-        super().__init__(capsule_cube.node)
+        super().__init__(node=cube.node, pts=pts)
+        self.r = r
+
+    def param_apply(self, func_name: str, params: Vec3) -> CapsuleCube:
+        node: OpenSCADObject = param_apply(func_name, params, self.node)
+        pts: list[Point3D] = [param_apply(func_name, params, pt) for pt in self.pts]
+        dst = CapsuleCube(node=node, pts=pts, r=self.r)
+        return dst
+
 
 if __name__ == "__main__":
-    # Example usage
-    capsule_cube = CapsuleCube(size=(100, 20, 40))
-    capsule_cube.render()
+    taobj = CapsuleCube(size=(30, 5, 30), center=CenterType.BOTTOM_LEFT)
+    taobj = taobj.translate((10, 20, 30))
+    taobj = taobj.rotate((10, 20, 30))
+    taobj = taobj.scale((1.5, 2.0, 2.5))
+    c = Cube(size=(2, 2, 2), center=CenterType.BOTTOM_CENTER)
+    taobj += c
+    c = Cube(size=(1, 1, 1), center=CenterType.BOTTOM_CENTER)
+    taobj -= c
+    dst = taobj.copy()
+    for i, pt in enumerate(taobj.pts):
+        pt_cube = Cube(size=(1, 1, 5), center=CenterType.CENTER).translate(pt.to_tuple())
+        dst += pt_cube
+    dst.render()
 
 # %%

@@ -178,5 +178,5 @@ class SolxObject:
     def __add__(self, other: SolxObject) -> Self:
         return self.other_param_apply('union', other)
 
-    def __sub__(self, other: SolxObject) -> SolxObject:
+    def __sub__(self, other: SolxObject) -> Self:
         return self.other_param_apply('difference', other)

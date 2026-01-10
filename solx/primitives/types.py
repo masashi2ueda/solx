@@ -20,3 +20,5 @@ class CenterType(Enum):
     BOTTOM_CENTER = auto()
     CENTER = auto()
     BOTTOM_LEFT = auto()
+
+DefautltCenterType = CenterType.BOTTOM_CENTER
