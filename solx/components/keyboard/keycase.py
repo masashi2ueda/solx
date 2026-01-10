@@ -1,6 +1,5 @@
 # %%
 from solx import Cube, Cylinder, HollowCube, PolygonExtrude
-from solx.components.magnet import magnet_cylinder32
 from solx.primitives.types import CenterType
 
 large_val = 10.0
@@ -55,7 +54,7 @@ bat_usb_offset_z = 2
 #              ---↔ btm_top_mgn_xy
 #             <->: top_out_mgn
 top_h0 = 1.0
-top_h1 = 5.0
+top_h1 = 6.0
 btm_top_mgn_xy = 0.15
 top_out_mgn = 3.0
 
@@ -120,8 +119,9 @@ pcb_plate = PolygonExtrude(points=pcb_out_pts, height=2)
 pcb_plate = pcb_plate.translate((0, 0, btm_h0 + btm_h1))
 
 # bottom case outer cube
+btm_pts = shift_pcb_points(pcb_out_pts, btm_out_mgn)
 btm_case = PolygonExtrude(
-    points=shift_pcb_points(pcb_out_pts, btm_out_mgn),
+    points=btm_pts,
     height=btm_h2 + btm_h1 + btm_h0
 )
 
@@ -151,9 +151,9 @@ btm_case -= PolygonExtrude(
     height=btm_h2+btm_h1+btm_h0
 )
 
-(btm_case + pcb_plate).render()
+# (btm_case + pcb_plate).render()
 
-# %%
+
 # top case
 top_points = shift_pcb_points(
     pcb_out_pts,
@@ -165,9 +165,10 @@ top_case = PolygonExtrude(
 )
 
 # subtract bottom case space
+top_subt_btm_pts = shift_pcb_points(pcb_out_pts,
+    btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1)
 sbt_btm_case = PolygonExtrude(
-    points=shift_pcb_points(pcb_out_pts,
-    btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1),
+    points=top_subt_btm_pts,
     height=btm_h
 )
 top_case -= sbt_btm_case
@@ -268,14 +269,89 @@ set_swith_diode(8, -108.0 + offset_x, 20.0 + offset_y)
 set_swith_diode(12, -109.0 + offset_x, 40.0 + offset_y)
 set_swith_diode(16, -92.0 + offset_x, 34.0 + offset_y)
 
-top_case.render()
-mag_cylinder = magnet_cylinder32.create_magnet_hole()
+mouse_plate_z = btm_h0 + btm_h1
+mouse_plate_pcb_dz = 1.0
+
+# subtract mouse space
+RITHG_MGN = 8.0
+# LEFT_MGN = 10.0
+DOWN_MGN = 20.0
+right_mx = pcb_out_pts[5][0] + RITHG_MGN
+left_mx = pcb_out_pts[4][0]
+up_my = pcb_out_pts[5][1]
+down_my = pcb_out_pts[6][1] - DOWN_MGN
+ms_pt0 = (right_mx, up_my)
+ms_pt1= (left_mx, up_my)
+ms_pt2= (left_mx, down_my)
+ms_pt3 = (right_mx, down_my)
+mouse_subt_cube = PolygonExtrude(
+    points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
+    height=30.0
+)
+top_case -= mouse_subt_cube.translate((0, 0, 0))
+btm_case -= mouse_subt_cube.translate((0, 0, mouse_plate_z))
+# top_case += Cube(size=(1, 1, 30)).translate((ms_pt0[0], ms_pt0[1], 0))
+# top_case += Cube(size=(1, 1, 30)).translate((ms_pt1[0], ms_pt1[1], 0))
+# top_case += Cube(size=(1, 1, 30)).translate((ms_pt2[0], ms_pt2[1], 0))
+# top_case += Cube(size=(1, 1, 30)).translate((ms_pt3[0], ms_pt3[1], 0))
+# top_case.render()
+# mag_cylinder = magnet_cylinder32.create_magnet_hole()
+
+# mouse plate
+mouse_plate_thin = 2.0
+right_mx = pcb_out_pts[5][0]
+left_mx = pcb_out_pts[4][0]
+up_my = pcb_out_pts[5][1]
+down_my = pcb_out_pts[6][1]
+ms_pt0 = (right_mx, up_my)
+ms_pt1= (left_mx, up_my)
+ms_pt2= (left_mx, down_my)
+ms_pt3 = (right_mx, down_my)
+mouse_plate = PolygonExtrude(
+    points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
+    height=mouse_plate_thin
+).translate((0, 0, mouse_plate_z - mouse_plate_thin))
+# screw hole
+mh_dx = 15.0
+mh_dy1 = 6.0
+mh_dy2 = 22.0
+mh_l = 2.0
+screw_hole = Cylinder(radius=mh_l/2, height=mouse_plate_thin)
+# screw_hole = Cylinder(radius=mh_l/2, height=30)
+mouse_plate -= screw_hole.translate((right_mx - mh_dx, down_my + mh_dy1, mouse_plate_z - mouse_plate_thin))
+mouse_plate -= screw_hole.translate((right_mx - mh_dx, down_my + mh_dy2, mouse_plate_z - mouse_plate_thin))
+
+btm_case += mouse_plate
+
 # %%
-# dst = btm_case
-dst = top_case
+dst = btm_case
+# dst = top_case
 # dst = btm_case + top_case
-# only_type = ""
-only_type = "left_top"
+
+# mag_top_right
+mag_z = btm_h0 + btm_h1 - 2.0
+mag_dy = 5.0
+mag_y = pcb_out_pts[0][1] - mag_dy
+mag_x_btm = btm_pts[0][0]
+mag_x_top = top_subt_btm_pts[0][0]
+cx = Cube((30, 1, 1),center=CenterType.CENTER)
+from solx.components.magnet import magnet_cylinder32 as mc32
+
+mag_hole_cube = mc32.MagnetHoleCube()
+# mag_cyl = mag_cyl.rotate((0, 90, 0))
+dst += mag_hole_cube
+# mag_cyl_l0 = mag_cyl.copy()
+# mag_cyl_r0 = mag_cyl.translate((-mc32.h, 0, 0))
+# dst += cx.translate((mag_x_btm, mag_y, mag_z))
+# dst += mag_cyl_r0
+# dst -= mag_cyl_r0.translate((mag_x_btm, mag_y, mag_z))
+# dst -= mag_cyl_l0.translate((mag_x_top, mag_y, mag_z))
+
+
+only_type = ""
+# only_type = "left_top"
+# only_type = "down"
+only_type = "top"
 # only left top
 if only_type == "left_top":
     off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
@@ -286,9 +362,17 @@ if only_type == "left_down":
     off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
     dst -= off_cube.translate((110, -160, 0))
     dst -= off_cube.translate((50, -100, 0))
+if only_type == "down":
+    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
+    dst -= off_cube.translate((50, -100, 0))
+if only_type == "top":
+    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
+    dst -= off_cube.translate((50, -250, 0))
+
 dst.render()
 dst_dir_path = "/home/uedam/dev/solx/examples/output_stl"
 dst.save_stl(f"{dst_dir_path}/case.stl")
+dst.save_scad(f"{dst_dir_path}/case.scad")
 
 # %%
 

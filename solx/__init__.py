@@ -1,32 +1,31 @@
 
-"""Solx - A 3D solid modeling library.
+# """Solx - A 3D solid modeling library.
 
-This package provides classes and utilities for creating and manipulating
-3D geometric objects including cubes, cylinders, and other primitives.
-"""
+# This package provides classes and utilities for creating and manipulating
+# 3D geometric objects including cubes, cylinders, and other primitives.
+# """
 
-from .config import EnvConfig
-from .core import SolxObject, Vector3D, normalize_vector3d
-from .primitives import (
-    CapsuleCube,
-    CenterType,
-    Cube,
-    Cylinder,
-    HollowCube,
-    PolygonExtrude,
-    RoundedCube,
-)
+# from .config import EnvConfig
+# from .core import Point3D, SolxObject
+# from .primitives import (
+#     CapsuleCube,
+#     CenterType,
+#     Cube,
+#     Cylinder,
+#     HollowCube,
+#     PolygonExtrude,
+#     RoundedCube,
+# )
 
-__all__ = [
-    "SolxObject",
-    "Vector3D",
-    "normalize_vector3d",
-    "Cube",
-    "Cylinder",
-    "CenterType",
-    "RoundedCube",
-    "PolygonExtrude",
-    "CapsuleCube",
-    "EnvConfig",
-    "HollowCube",
-]
+# __all__ = [
+#     "SolxObject",
+#     "Point3D",
+#     "Cube",
+#     "Cylinder",
+#     "CenterType",
+#     "RoundedCube",
+#     "PolygonExtrude",
+#     "CapsuleCube",
+#     "EnvConfig",
+#     "HollowCube",
+# ]

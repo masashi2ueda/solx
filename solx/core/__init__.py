@@ -1,2 +1,3 @@
-from .base import SolxObject
-from .vector import Vector3D, normalize_vector3d
+from .base import Point3D, SolxObject, Vec3
+
+__all__ = ["SolxObject", "Point3D", "Vec3"]

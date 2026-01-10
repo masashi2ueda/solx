@@ -5,16 +5,81 @@ SolidPython/OpenSCAD nodes with additional utility methods and transforms.
 """
 from __future__ import annotations
 
+import numpy as np
 import solid
 from solid.objects import OpenSCADObject
 from viewscad import Renderer
 
 from solx.config.openscad import get_openscad_path
-from solx.core.vector import Vector3D, normalize_vector3d
 
 # Initialize renderer with configured OpenSCAD path
 _renderer = Renderer(openscad_path=get_openscad_path())
 
+Vec3 = tuple[float, float, float]
+
+
+def node_manipulate(node: OpenSCADObject, func_name: str, params: Vec3) -> OpenSCADObject:
+    if func_name == 'translate':
+        return solid.translate(params)(node)
+    elif func_name == 'rotate':
+        return solid.rotate(params)(node)
+    elif func_name == 'scale':
+        return solid.scale(params)(node)
+    else:
+        raise ValueError(f"Unknown function name: {func_name}")
+
+
+class Point3D:
+    def __init__(self, x: float, y: float, z: float):
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    def to_tuple(self) -> Vec3:
+        return (self.x, self.y, self.z)
+
+    def translate(self, translation_vector: Vec3) -> Point3D:
+        dx, dy, dz = translation_vector
+        return Point3D(self.x + dx, self.y + dy, self.z + dz)
+
+    def rotate(self, rotation_angles: Vec3) -> Point3D:
+        rx, ry, rz = np.radians(rotation_angles)
+        # Rotation matrices around each axis
+        Rx = np.array([[1, 0, 0],
+                       [0, np.cos(rx), -np.sin(rx)],
+                       [0, np.sin(rx), np.cos(rx)]])
+        Ry = np.array([[np.cos(ry), 0, np.sin(ry)],
+                       [0, 1, 0],
+                       [-np.sin(ry), 0, np.cos(ry)]])
+        Rz = np.array([[np.cos(rz), -np.sin(rz), 0],
+                       [np.sin(rz), np.cos(rz), 0],
+                       [0, 0, 1]])
+        # Combined rotation matrix
+        R = Rz @ Ry @ Rx
+        # Original point as vector
+        p = np.array([self.x, self.y, self.z])
+        # Rotated point
+        p_rotated = R @ p
+        return Point3D(p_rotated[0], p_rotated[1], p_rotated[2])
+    
+    def scale(self, scale_factors: Vec3) -> Point3D:
+        sx, sy, sz = scale_factors
+        return Point3D(self.x * sx, self.y * sy, self.z * sz)
+    
+    def _param_apply(self, func_name: str, params: Vec3) -> Point3D:
+        if func_name == 'translate':
+            return self.translate(params)
+        elif func_name == 'rotate':
+            return self.rotate(params)
+        elif func_name == 'scale':
+            return self.scale(params)
+        else:
+            raise ValueError(f"Unknown function name: {func_name}")
+
+    def distance_to(self, other: Point3D) -> float:
+        return np.sqrt((self.x - other.x) ** 2 +
+                       (self.y - other.y) ** 2 +
+                       (self.z - other.z) ** 2)
 
 class SolxObject:
     """Wrapper class for SolidPython/OpenSCAD nodes.
@@ -23,7 +88,9 @@ class SolxObject:
     additional utility methods, transforms, and metadata.
     """
 
-    def __init__(self, openscad_node: OpenSCADObject) -> None:
+    def __init__(
+        self,
+        openscad_node: OpenSCADObject) -> None:
         """Initialize SolxObject with a SolidPython node.
 
         Args:
@@ -54,107 +121,14 @@ class SolxObject:
         """
         _renderer.render(self.node, outfile=path)
 
-    def translate(self, translation_vector: Vector3D) -> SolxObject:
-        """Translate the SolxObject by a given vector.
-
-        Args:
-            translation_vector: The translation vector as a tuple, numpy array, float, or list.
-
-        Returns:
-            Self for method chaining.
-        """
-        normalized_vector = normalize_vector3d(translation_vector)
-        return SolxObject(solid.translate(normalized_vector)(self.node))
-
-    def translate_x(self, distance: float) -> SolxObject:
-        """Translate the SolxObject along the X-axis.
-
-        Args:
-            distance: The distance to translate along the X-axis.
-
-        Returns:
-            Self for method chaining.
-        """
-        return self.translate((distance, 0.0, 0.0))
-
-    def translate_y(self, distance: float) -> SolxObject:
-        """Translate the SolxObject along the Y-axis.
-
-        Args:
-            distance: The distance to translate along the Y-axis.
-
-        Returns:
-            Self for method chaining.
-        """
-        return self.translate((0.0, distance, 0.0))
-
-    def translate_z(self, distance: float) -> SolxObject:
-        """Translate the SolxObject along the Z-axis.
-
-        Args:
-            distance: The distance to translate along the Z-axis.
-
-        Returns:
-            Self for method chaining.
-        """
-        return self.translate((0.0, 0.0, distance))
-
-    def rotate(self, rotation_angles: Vector3D) -> SolxObject:
-        """Rotate the SolxObject by given angles around each axis.
-
-        Args:
-            rotation_angles: The rotation angles (in degrees) as a tuple, numpy array, float, or list.
-
-        Returns:
-            Self for method chaining.
-        """
-        normalized_angles = normalize_vector3d(rotation_angles)
-        return SolxObject(solid.rotate(normalized_angles)(self.node))
-
-    def rotate_x(self, angle: float) -> SolxObject:
-        """Rotate the SolxObject around the X-axis.
-
-        Args:
-            angle: The rotation angle (in degrees) around the X-axis.
-
-        Returns:
-            Self for method chaining.
-        """
-        return self.rotate((angle, 0.0, 0.0))
-
-    def rotate_y(self, angle: float) -> SolxObject:
-        """Rotate the SolxObject around the Y-axis.
-
-        Args:
-            angle: The rotation angle (in degrees) around the Y-axis.
-
-        Returns:
-            Self for method chaining.
-        """
-        return self.rotate((0.0, angle, 0.0))
-
-    def rotate_z(self, angle: float) -> SolxObject:
-        """Rotate the SolxObject around the Z-axis.
-
-        Args:
-            angle: The rotation angle (in degrees) around the Z-axis.
-
-        Returns:
-            Self for method chaining.
-        """
-        return self.rotate((0.0, 0.0, angle))
-
-    def scale(self, scale_factors: Vector3D) -> SolxObject:
-        """Scale the SolxObject by given factors along each axis.
-
-        Args:
-            scale_factors: The scale factors as a tuple, numpy array, float, or list.
-
-        Returns:
-            Self for method chaining.
-        """
-        normalized_factors = normalize_vector3d(scale_factors)
-        return SolxObject(solid.scale(normalized_factors)(self.node))
+    def _param_apply(self, func_name: str, params: Vec3) -> SolxObject:
+        return SolxObject(node_manipulate(self.node, func_name, params))
+    def translate(self, translation_vector: Vec3) -> SolxObject:
+        return self._param_apply('translate', translation_vector)
+    def rotate(self, rotation_angles: Vec3) -> SolxObject:
+        return self._param_apply('rotate', rotation_angles)
+    def scale(self, scale_factors: Vec3) -> SolxObject:
+        return self._param_apply('scale', scale_factors)
 
     def copy(self) -> SolxObject:
         """Create a copy of the SolxObject.
