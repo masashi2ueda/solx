@@ -2,6 +2,9 @@
 from solx import Cube, Cylinder, HollowCube, PolygonExtrude
 from solx.primitives.types import CenterType
 
+large_val = 10.0
+min_val = 0.1
+
 ##### case point layout
 #  ↑y
 # →x
@@ -9,116 +12,14 @@ from solx.primitives.types import CenterType
 #  |                     |
 #  |   pt4-----pt5       |
 # pt2--pt3     pt6------pt7
+
 btm_h2 = 2.0
 btm_h1 = 10.0
 btm_h0 = 0.5
-btm_h = btm_h2 + btm_h1 + btm_h0
 
 btm_out_mgn = 1.0
 btm_pcb_mgn1 = 0.15
 btm_pcb_mgn0 = 1.0
-pcb2btm_out = btm_out_mgn + btm_pcb_mgn1
-
-# top case layout
-top_h0 = 1.0
-top_h1 = 6.0
-btm_top_mgn_xy = 0.15
-top_out_mgn = 3.0
-
-
-def shift_pcb_points(pts, mgn):
-    outer_direstion = [
-        ( +1, +1),  # pt0
-        ( -1, +1),  # pt1
-        ( -1, -1),  # pt2
-        ( +1, -1),  # pt3
-        ( +1, -1),  # pt4
-        ( -1, -1),  # pt5
-        ( -1, -1),  # pt6
-        ( +1, -1),  # pt7
-    ]
-    dst_points = [
-        (
-            pts[i][0] + outer_direstion[i][0] * mgn,
-            pts[i][1] + outer_direstion[i][1] * mgn)
-        for i in range(len(pts))
-    ]
-    return dst_points
-
-# R
-pcb_out_pts_raw = [(189.0, 55.0), (77.0, 55.0), (77.0, 150.0), (118.0, 150.0), (118.0, 121.0), (158.895, 121.0), (158.895, 150.0), (189.0, 150.0)]
-
-##################
-# bottom case
-##################
-# pcb points
-pcb_out_pts = [(x, -y) for x, y in pcb_out_pts_raw]
-cx = pcb_out_pts[1][0] / 2 + pcb_out_pts[0][0] / 2
-cy = pcb_out_pts[2][1] / 2 + pcb_out_pts[1][1] / 2
-pcb_out_pts = [(x - cx, y - cy) for x, y in pcb_out_pts]
-
-# pcb_plate
-pcb_plate = PolygonExtrude(points=pcb_out_pts, height=2)
-pcb_plate = pcb_plate.translate((0, 0, btm_h0 + btm_h1))
-
-# bottom case outer cube
-btm_pts = shift_pcb_points(pcb_out_pts, pcb2btm_out)
-btm_case = PolygonExtrude(points=btm_pts,height=btm_h)
-
-# for battery space
-btm_bat_space_pts = shift_pcb_points(pcb_out_pts, -btm_pcb_mgn0)
-btm_bat_space = PolygonExtrude(points=btm_bat_space_pts, height=btm_h1 + btm_h2)
-btm_bat_space = btm_bat_space.translate((0, 0, btm_h0))
-btm_case -= btm_bat_space
-
-# for pcb space
-btm_pcb_space_pts = shift_pcb_points(pcb_out_pts, btm_pcb_mgn1)
-btm_pcb_space = PolygonExtrude(points=btm_pcb_space_pts,height=btm_h2)
-btm_pcb_space = btm_pcb_space.translate((0, 0, btm_h0 + btm_h1))
-btm_case -= btm_pcb_space
-
-# for mouse space
-btm_ms_mgn = pcb2btm_out + btm_pcb_mgn0
-btm_ms_x = btm_pts[5][0]
-btm_ms_y0 = btm_pts[5][1] + btm_ms_mgn
-btm_ms_y1 = btm_pts[6][1]
-btm_mouse_pts = [
-    (btm_ms_x, btm_ms_y0),
-    (btm_ms_x, btm_ms_y1),
-    (btm_ms_x + btm_ms_mgn, btm_ms_y1),
-    (btm_ms_x + btm_ms_mgn, btm_ms_y0)
-]
-btm_mouse_space = PolygonExtrude(points=btm_mouse_pts,height=btm_h2+btm_h1+btm_h0)
-btm_case -= btm_mouse_space
-
-(btm_case).render()
-
-# ##################
-# # top case
-# ##################
-# # top case
-# pcb2top_out = top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1
-# top_points = shift_pcb_points(pcb_out_pts, pcb2top_out)
-# btm_h = btm_h2 + btm_h1 + btm_h0
-# top_case = PolygonExtrude(points=top_points,height=btm_h + top_h0)
-
-# # subtract bottom case space
-# top_subt_btm_pts = shift_pcb_points(pcb_out_pts, btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1)
-# sbt_btm_case = PolygonExtrude(
-#     points=top_subt_btm_pts,
-#     height=btm_h
-# )
-# top_case -= sbt_btm_case
-
-
-
-# (btm_case + top_case).render()
-
-# %%
-
-large_val = 10.0
-min_val = 0.1
-
 
 ######################################
 # bottom case usb space
@@ -183,19 +84,94 @@ bat_h = 4.0
 bat_d = 10.0
 bat_w = 5.0
 
+# R
+pcb_out_pts_raw = [(189.0, 55.0), (77.0, 55.0), (77.0, 150.0), (118.0, 150.0), (118.0, 121.0), (158.895, 121.0), (158.895, 150.0), (189.0, 150.0)]
 
+
+def shift_pcb_points(pts, mgn):
+    outer_direstion = [
+        ( +1, +1),  # pt0
+        ( -1, +1),  # pt1
+        ( -1, -1),  # pt2
+        ( +1, -1),  # pt3
+        ( +1, -1),  # pt4
+        ( -1, -1),  # pt5
+        ( -1, -1),  # pt6
+        ( +1, -1),  # pt7
+    ]
+    dst_points = [
+        (
+            pts[i][0] + outer_direstion[i][0] * mgn,
+            pts[i][1] + outer_direstion[i][1] * mgn)
+        for i in range(len(pts))
+    ]
+    return dst_points
 
 
 # %%
+##################
+# base bottom case
+##################
+# Invert Y axis
+pcb_out_pts = [(x, -y) for x, y in pcb_out_pts_raw]
 
+pcb_plate = PolygonExtrude(points=pcb_out_pts, height=2)
+pcb_plate = pcb_plate.translate((0, 0, btm_h0 + btm_h1))
 
+# bottom case outer cube
+btm_pts = shift_pcb_points(pcb_out_pts, btm_out_mgn)
+btm_case = PolygonExtrude(
+    points=btm_pts,
+    height=btm_h2 + btm_h1 + btm_h0
+)
 
+# for battery space
+btm_case -= PolygonExtrude(
+    points=shift_pcb_points(pcb_out_pts, -btm_pcb_mgn0),
+    height=btm_h1 + btm_h2
+).translate((0, 0, btm_h0))
 
+# for pcb space
+btm_case -= PolygonExtrude(
+    points=shift_pcb_points(pcb_out_pts, btm_pcb_mgn1),
+    height=btm_h2
+).translate((0, 0, btm_h0+btm_h1))
+
+# subtract mouse space
+ms_org_pt5x = pcb_out_pts[5][0]
+ms_org_pt5y = pcb_out_pts[5][1]
+ms_org_pt6x = pcb_out_pts[6][0]
+ms_org_pt6y = pcb_out_pts[6][1]
+ms_pt0 = (ms_org_pt5x+btm_pcb_mgn0, ms_org_pt5y+btm_pcb_mgn0)
+ms_pt1= (ms_org_pt5x-btm_out_mgn, ms_org_pt5y+btm_pcb_mgn0)
+ms_pt2= (ms_org_pt6x-btm_out_mgn, ms_org_pt6y-btm_pcb_mgn0)
+ms_pt3 = (ms_org_pt6x+btm_pcb_mgn0, ms_org_pt6y-btm_pcb_mgn0)
+btm_case -= PolygonExtrude(
+    points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
+    height=btm_h2+btm_h1+btm_h0
+)
 
 # (btm_case + pcb_plate).render()
 
 
+# top case
+top_points = shift_pcb_points(
+    pcb_out_pts,
+    top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1)
+btm_h = btm_h2 + btm_h1 + btm_h0
+top_case = PolygonExtrude(
+    points=top_points,
+    height=btm_h + top_h0
+)
 
+# subtract bottom case space
+top_subt_btm_pts = shift_pcb_points(pcb_out_pts,
+    btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1)
+sbt_btm_case = PolygonExtrude(
+    points=top_subt_btm_pts,
+    height=btm_h
+)
+top_case -= sbt_btm_case
 
 # subtract half h
 sbt_btm_case = PolygonExtrude(
