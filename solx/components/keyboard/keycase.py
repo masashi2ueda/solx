@@ -24,6 +24,7 @@ top_h0 = 1.0
 top_h1 = 6.0
 btm_top_mgn_xy = 0.15
 top_out_mgn = 3.0
+btm2top_out = btm_top_mgn_xy + top_out_mgn
 
 
 def shift_pcb_points(pts, mgn):
@@ -91,28 +92,28 @@ btm_mouse_pts = [
 btm_mouse_space = PolygonExtrude(points=btm_mouse_pts,height=btm_h2+btm_h1+btm_h0)
 btm_case -= btm_mouse_space
 
-(btm_case).render()
+# (btm_case).render()
 
-# ##################
-# # top case
-# ##################
-# # top case
-# pcb2top_out = top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1
-# top_points = shift_pcb_points(pcb_out_pts, pcb2top_out)
-# btm_h = btm_h2 + btm_h1 + btm_h0
-# top_case = PolygonExtrude(points=top_points,height=btm_h + top_h0)
+##################
+# top case
+##################
+# top case
+top_points = shift_pcb_points(btm_pts, btm2top_out)
+top_h = btm_h + top_h0
+top_case = PolygonExtrude(points=top_points,height=top_h)
 
-# # subtract bottom case space
-# top_subt_btm_pts = shift_pcb_points(pcb_out_pts, btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1)
-# sbt_btm_case = PolygonExtrude(
-#     points=top_subt_btm_pts,
-#     height=btm_h
-# )
-# top_case -= sbt_btm_case
+# subtract bottom case space
+top_subt_btm_pts = shift_pcb_points(btm_pts, btm_top_mgn_xy)
+sbt_btm_case = PolygonExtrude(points=top_subt_btm_pts,height=btm_h)
+top_case -= sbt_btm_case
 
+# subtract half h
+sbt_btm_case = PolygonExtrude(points=top_points,height=btm_h - top_h1)
+top_case -= sbt_btm_case
 
-
-# (btm_case + top_case).render()
+dst = btm_case + top_case
+subt_cube = Cube(size=(300, 300, 300), center=CenterType.BOTTOM_LEFT)
+(dst - subt_cube).render()
 
 # %%
 
@@ -197,13 +198,6 @@ bat_w = 5.0
 
 
 
-# subtract half h
-sbt_btm_case = PolygonExtrude(
-    points=shift_pcb_points(pcb_out_pts,
-    btm_out_mgn+large_val),
-    height=btm_h - top_h1
-)
-top_case -= sbt_btm_case
 
 pcb2topout_xy = top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1
 btm2pcbtop = btm_h0 + btm_h1 + btm_h2
