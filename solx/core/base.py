@@ -98,16 +98,12 @@ class SolxObject:
     def __init__(
         self,
         openscad_node: OpenSCADObject=None,
-        params: list[OpenSCADObject]=None
         ) -> None:
         """Initialize SolxObject with a SolidPython node.
 
         Args:
             openscad_node: The SolidPython/OpenSCAD node to wrap.
         """
-        if params is not None:
-            self.node = params[0]
-            return
         self.node = openscad_node
 
     @property

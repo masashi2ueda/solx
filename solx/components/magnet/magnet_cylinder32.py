@@ -5,96 +5,87 @@ that can be subtracted from other 3D objects for embedding magnets.
 """
 
 # %%
-from solx import Cube, Cylinder
-from solx.core.base import SolxObject
-from solx.primitives.types import CenterType
+from __future__ import annotations
 
-r = 1.6
-h = 2.1
+import copy
+
+from solx.core import Point3D, SolxObject, Vec3, param_apply
+from solx.primitives import CenterType, Cube, Cylinder, DefautltCenterType
 
 
-def create_magnet_hole()->Cylinder:
-    """Create a cylindrical magnet hole.
+class MagnetCylinder32(Cylinder):
+    def __init__(
+        self,
+        radius: float = 1.6,
+        height: float = 2.1,
+        center: CenterType = DefautltCenterType,
+        segments: int = 32,
+    ):
+        super().__init__(radius=radius, height=height, center=center, segments=segments)
+    
 
-    Returns:
-        Cylinder: A cylinder representing the magnet hole.
-    """
-    mag_cyl = Cylinder(radius=r, height=h)
-    return mag_cyl
 
-class MagnetHoleCube(SolxObject):
-    def __init__(self, mgn: float = 2):
-        mag_cyl = create_magnet_hole()
-        mag_cyl = mag_cyl.translate((0, 0, mgn))
-        cube_wd = r * 2 + mgn
-        cube_h = h + mgn
-        cube = Cube(size=(cube_wd, cube_wd, cube_h), center=CenterType.BOTTOM_CENTER)
+class MagnetCube32(Cube):
+    def __init__(
+        self,
+        mgn_wd: float = 2,
+        mgn_h: float = 2,
+        center: CenterType = DefautltCenterType,
+    ):
+        mag_cyl = MagnetCylinder32(center=center)
+        mag_cyl = mag_cyl.translate((0, 0, mgn_h))
+        cube_wd = mag_cyl.r * 2 + mgn_wd
+        cube_h = mag_cyl.h + mgn_h
+        cube = Cube(size=(cube_wd, cube_wd, cube_h), center=center)
         hole_cube = cube - mag_cyl
 
+        super()._init(node=hole_cube.node, pts=hole_cube.pts)
+        self.mag_cyl_r = mag_cyl.r
+        self.mag_cyl_h = mag_cyl.h
+        self.mag_cyl_pts = mag_cyl.pts
         self.cube = cube
-        self.mag_cyl = mag_cyl
-        self.hole_cube = hole_cube
-        self.cube_wd = cube_wd
-        self.cube_h = cube_h
+        self.cylinder = mag_cyl
     
-        super().__init__(
-            openscad_node=hole_cube.node,
-            sub_nodes=[cube.node, mag_cyl.node])
+    @property
+    def mag_bottom_center(self) -> Point3D:
+        return self.mag_cyl_pts[0]
+    @property
+    def mag_top_center(self) -> Point3D:
+        return self.mag_cyl_pts[1]
+
+    def param_apply(self, func_name: str, params: Vec3) -> MagnetCube32:
+        dst = copy.deepcopy(self)
+        # base_cube
+        dst.node = param_apply(func_name, params, self.node)
+        dst.pts = [param_apply(func_name, params, pt) for pt in self.pts]
+        
+        dst.mag_cyl_pts = [param_apply(func_name, params, pt) for pt in self.mag_cyl_pts]
+        dst.cube = self.cube.param_apply(func_name, params)
+        dst.cylinder = self.cylinder.param_apply(func_name, params)
+        return dst
+
+    def add_with_subt(self, other: SolxObject) -> MagnetCube32:
+        dst = copy.deepcopy(self)
+        dst += other
+        dst -= self.cylinder
+        return dst
 
 
 if __name__ == "__main__":
-    mhc = MagnetHoleCube()
+    taobj = MagnetCube32(center=CenterType.BOTTOM_CENTER)
+    base_cube = Cube(size=(2, 2, 10), center=CenterType.CENTER).translate((2, 0, 0))
+    taobj = taobj.add_with_subt(base_cube)
+    taobj = taobj.translate((10, 20, 30))
+    taobj = taobj.rotate((10, 20, 30))
+    taobj = taobj.scale((1.5, 2.0, 2.5))
 
-    outer_cube = Cube(size=(10, 10, 3), center=CenterType.BOTTOM_CENTER)
-    outer_cube -= mhc.cube
-    outer_cube += mhc
+    dst = taobj.copy()
+    for i, pt in enumerate(taobj.pts):
+        pt_cube = Cube(size=(0.3, 0.3, 2), center=CenterType.CENTER).translate(pt.to_tuple())
+        dst += pt_cube
+    for i, pt in enumerate(taobj.mag_cyl_pts):
+        pt_cube = Cube(size=(0.3, 0.3, 2), center=CenterType.CENTER).translate(pt.to_tuple())
+        dst += pt_cube
 
-    outer_cube.render()
-    dst_dir_path = "/home/uedam/dev/solx/examples/output_stl"
-    outer_cube.save_stl(f"{dst_dir_path}/mag.stl")
+    dst.render()
 
-# %%
-mhc = MagnetHoleCube()
-mhc = mhc.translate((10, 0, 0))
-(mhc + mhc.cube).render()
-
-# %%
-class A:
-    def __init__(self, val: float, sub_vals: list[float]|None = None):
-        self.val = val
-        self.sub_vals = sub_vals
-
-    def add(self, add_val: float):
-        return self.__class__.from_val(self.val + add_val, self.sub_vals)
-
-    @classmethod
-    def from_val(cls, val: float, sub_vals: list[float]|None = None):
-        return cls(val, sub_vals)
-
-class B(A):
-    def __init__(self,val1: float,val2: float,
-        val=None, sub_vals=None):
-        if val is not None:
-            super().__init__(val, sub_vals)
-            self.val1 = sub_vals[0]
-            self.val2 = sub_vals[1]
-            self.val3 = val
-            return
-        self.val1 = val1
-        self.val2 = val2
-        self.val3 = val1 + val2
-        sub_vals = [val1, val2]
-        super().__init__(self.val3, sub_vals=[val1, val2])
-    
-    @classmethod
-    def from_val(cls, val: float, sub_vals: list[float]|None = None):
-        # どう分解するかは設計次第
-        return cls(None, None, val, sub_vals)
-    def __repr__(self):
-        return f"B(val1={self.val1}, val2={self.val2}, val3={self.val3})"
-
-b = B(2, 3)
-c = b.add(5)
-c
-
-# %%

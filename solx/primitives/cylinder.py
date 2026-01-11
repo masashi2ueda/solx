@@ -46,6 +46,13 @@ class Cylinder(SolxObject):
 
         super().__init__(cyl.node)
         self.pts = pts
+        self.r = radius
+        self.h = height
+
+    def _init(self, node: solid.OpenSCADObject, pts: list[Point3D]) -> None:
+        self.node = node
+        self.pts = pts
+
     @property
     def bottom_center(self) -> Point3D:
         return self.pts[0]
