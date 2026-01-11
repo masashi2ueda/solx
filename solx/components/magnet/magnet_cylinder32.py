@@ -8,9 +8,12 @@ that can be subtracted from other 3D objects for embedding magnets.
 from __future__ import annotations
 
 import copy
+from typing import TypeVar
 
 from solx.core import Point3D, SolxObject, Vec3, param_apply
 from solx.primitives import CenterType, Cube, Cylinder, DefautltCenterType
+
+T = TypeVar("T", bound="SolxObject")
 
 
 class MagnetCylinder32(Cylinder):
@@ -64,22 +67,22 @@ class MagnetCube32(Cube):
         dst.cylinder = self.cylinder.param_apply(func_name, params)
         return dst
 
-    def add_with_subt(self, other: SolxObject) -> MagnetCube32:
-        dst = copy.deepcopy(self)
-        dst += other
-        dst -= self.cylinder
-        return dst
+    def add_to(self, base: T) -> T:
+        base += self
+        base -= self.cylinder
+        return base
 
 
 if __name__ == "__main__":
     taobj = MagnetCube32(center=CenterType.BOTTOM_CENTER)
-    base_cube = Cube(size=(2, 2, 10), center=CenterType.CENTER).translate((2, 0, 0))
-    taobj = taobj.add_with_subt(base_cube)
-    taobj = taobj.translate((10, 20, 30))
+    cube = Cube(size=(2, 2, 10), center=CenterType.CENTER).translate((2, 0, 0))
+    cube = taobj.add_to(cube)
+    taobj = taobj.translate((1, 2, 3))
     taobj = taobj.rotate((10, 20, 30))
     taobj = taobj.scale((1.5, 2.0, 2.5))
 
     dst = taobj.copy()
+    dst += cube
     for i, pt in enumerate(taobj.pts):
         pt_cube = Cube(size=(0.3, 0.3, 2), center=CenterType.CENTER).translate(pt.to_tuple())
         dst += pt_cube
@@ -89,3 +92,4 @@ if __name__ == "__main__":
 
     dst.render()
 
+# %%
