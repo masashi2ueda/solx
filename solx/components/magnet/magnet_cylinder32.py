@@ -13,7 +13,7 @@ from typing import TypeVar
 from solx.core import Point3D, SolxObject, Vec3, param_apply
 from solx.primitives import CenterType, Cube, Cylinder, DefautltCenterType
 
-T = TypeVar("T", bound="SolxObject")
+T = TypeVar("T", bound=SolxObject)
 
 
 class MagnetCylinder32(Cylinder):

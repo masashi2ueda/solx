@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import copy
+from typing import TypeVar
 
-from solx.core import Vec3
+from solx.core import SolxObject, Vec3
 from solx.primitives.cube import Cube
 from solx.primitives.types import CenterType, DefautltCenterType
+
+T = TypeVar("T", bound=SolxObject)
 
 
 class HollowCube(Cube):
@@ -67,6 +70,11 @@ class HollowCube(Cube):
         dst = dst.cube_param_apply(func_name, params)
         dst.subt_cube = self.subt_cube.param_apply(func_name, params)
         return dst
+    
+    def add_to(self, base: T) -> T:
+        base += self
+        base -= self.subt_cube
+        return base
 
 
 if __name__ == "__main__":
