@@ -73,10 +73,10 @@ class ScrewThread(SolxObject):
         super().__init__(dst.node)
 
 
-tooth_height = 0.5
-tooth_width = 0.2
 screw_height = 15
 screw_radius = 2
+tooth_height = 0.5
+tooth_width = 0.2
 rotation_cnt = 5
 handle_height = 3
 handle_width = 30
@@ -94,4 +94,12 @@ thread = ScrewThread(
 )
 thread.render()
 # %%
-
+nat_offset_xy = 0.1
+nat_offset_z = 0
+nat_width = (screw_radius + tooth_height) * 2 + nat_offset_xy
+nat_depth = nat_width
+nat_height = 10
+nat_cube = Cube(size=(nat_width, nat_depth, nat_height), center=CenterType.BOTTOM_CENTER)
+nat_cube -= thread.translate((0, 0, nat_offset_z))
+nat_cube.render()
+# %%
