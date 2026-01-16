@@ -53,6 +53,9 @@ ms_scw_dy1 = 6.0
 ms_scw_dy2 = 22.0
 ms_scw_l = 2.0
 
+# magnet
+mag_dz = 3.0
+mag_dy = 5.0
 
 # calclate
 btm_h = btm_h2 + btm_h1 + btm_h0
@@ -263,8 +266,6 @@ btm_case += mouse_plate
 
 
 # mag_top_right
-mag_dz = 3.0
-mag_dy = 5.0
 mag_z = btm_h0 + btm_h1 - mag_dz
 mag_y = pcb_out_pts[0][1] - mag_dy
 mag_x_btm = btm_pts[0][0]
@@ -297,11 +298,13 @@ btm_case = mag_hole_cube_btm.add_to(btm_case)
 dst = btm_case + top_case
 # dst = top_case
 # dst = btm_case
-# subt up right
-subt_cube = Cube(size=(LARGE_VAL, LARGE_VAL, LARGE_VAL), center=CenterType.BOTTOM_LEFT)
-# subt down right
-subt_cube = subt_cube.translate((0, -LARGE_VAL, 0))
-(dst - subt_cube).render()
+
+# # subt up right
+# subt_cube = Cube(size=(LARGE_VAL, LARGE_VAL, LARGE_VAL), center=CenterType.BOTTOM_LEFT)
+# # subt down right
+# subt_cube = subt_cube.translate((0, -LARGE_VAL, 0))
+# dst -= subt_cube
+dst.render()
 
 # %%
 
