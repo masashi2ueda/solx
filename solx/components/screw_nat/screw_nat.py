@@ -1,8 +1,15 @@
 # %%
+from __future__ import annotations
+
+import copy
+from typing import TypeVar
+
 from solid import screw_thread
 
-from solx.core import SolxObject
+from solx.core import SolxObject, Vec3
 from solx.primitives import CenterType, Cube, Cylinder
+
+T = TypeVar("T", bound=SolxObject)
 
 
 def create_trapezoid_thread(
@@ -73,33 +80,80 @@ class ScrewThread(SolxObject):
         super().__init__(dst.node)
 
 
-screw_height = 15
-screw_radius = 2
-tooth_height = 0.5
-tooth_width = 0.2
-rotation_cnt = 5
-handle_height = 3
-handle_width = 30
-handle_depth = 3
-thread = ScrewThread(
-    tooth_height=tooth_height,
-    tooth_width=tooth_width,
-    screw_height=screw_height,
-    screw_radius=screw_radius,
-    rotation_cnt=rotation_cnt,
-    handle_height=handle_height,
-    handle_width=handle_width,
-    handle_depth=handle_depth,
-    flat_ratio=0.3,
-)
-thread.render()
-# %%
-nat_offset_xy = 0.1
-nat_offset_z = 0
-nat_width = (screw_radius + tooth_height) * 2 + nat_offset_xy
-nat_depth = nat_width
-nat_height = 10
-nat_cube = Cube(size=(nat_width, nat_depth, nat_height), center=CenterType.BOTTOM_CENTER)
-nat_cube -= thread.translate((0, 0, nat_offset_z))
-nat_cube.render()
-# %%
+class ScrewNat(SolxObject):
+    def __init__(
+        self,
+        tooth_height: float,
+        tooth_width: float,
+        screw_height: float,
+        screw_radius: float,
+        rotation_cnt: int,
+        nat_h: float,
+        th_mgn = 0.1,
+        tw_mgn = 0.1,
+        tr_mgn = 0.1,
+        z_mgn = 2,
+        nat_offset_xy = 2,
+        flat_ratio: float = 0.3,
+    ):
+        thread_for_nat = ScrewThread(
+            tooth_height=tooth_height + th_mgn,
+            tooth_width=tooth_width + tw_mgn,
+            screw_height=screw_height,
+            screw_radius=screw_radius + tr_mgn,
+            rotation_cnt=rotation_cnt,
+            handle_height=0,
+            handle_width=0,
+            handle_depth=0,
+            flat_ratio=flat_ratio,
+        )
+        nat_width = (screw_radius + tooth_height) * 2 + nat_offset_xy
+        nat_depth = nat_width
+        nat_cube = Cube(size=(nat_width, nat_depth, nat_h), center=CenterType.BOTTOM_CENTER)
+        nat_cube -= thread_for_nat.translate((0, 0, z_mgn))
+        super().__init__(nat_cube.node)
+        self.thread = thread_for_nat
+
+
+    def param_apply(self, func_name: str, params: Vec3) -> ScrewNat:
+        dst = copy.deepcopy(self)
+        dst = dst.param_apply(func_name, params)
+        dst.thread = self.thread.param_apply(func_name, params)
+        return dst
+    
+    def add_to(self, base: T) -> T:
+        base += self
+        base -= self.thread
+        return base
+
+
+if __name__ == "__main__":
+    screw_height = 15
+    screw_radius = 2
+    tooth_height = 0.5
+    tooth_width = 0.2
+    rotation_cnt = 5
+    handle_height = 3
+    handle_width = 30
+    handle_depth = 3
+    flat_ratio = 0.3
+    nat_h = 10
+    thread = ScrewThread(
+        tooth_height=tooth_height,
+        tooth_width=tooth_width,
+        screw_height=screw_height,
+        screw_radius=screw_radius,
+        rotation_cnt=rotation_cnt,
+        handle_height=handle_height,
+        handle_width=handle_width,
+        handle_depth=handle_depth,
+        flat_ratio=flat_ratio,
+    )
+    nat = ScrewNat(
+        tooth_height=tooth_height,
+        tooth_width=tooth_width,
+        screw_height=screw_height,
+        screw_radius=screw_radius,
+        rotation_cnt=rotation_cnt,
+        nat_h=nat_h,)
+    (thread+ nat).render()
