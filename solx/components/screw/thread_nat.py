@@ -33,7 +33,7 @@ def create_trapezoid_thread(
     return pts
 
 
-class ScrewThread(SolxObject):
+class Screw(SolxObject):
     def __init__(
         self,
         tooth_height: float,
@@ -80,7 +80,7 @@ class ScrewThread(SolxObject):
         super().__init__(dst.node)
 
 
-class ScrewNat(SolxObject):
+class Nut(SolxObject):
     def __init__(
         self,
         tooth_height: float,
@@ -96,7 +96,7 @@ class ScrewNat(SolxObject):
         nat_offset_xy = 2,
         flat_ratio: float = 0.3,
     ):
-        thread_for_nat = ScrewThread(
+        thread_for_nat = Screw(
             tooth_height=tooth_height + th_mgn,
             tooth_width=tooth_width + tw_mgn,
             screw_height=screw_height,
@@ -115,7 +115,7 @@ class ScrewNat(SolxObject):
         self.thread = thread_for_nat
 
 
-    def param_apply(self, func_name: str, params: Vec3) -> ScrewNat:
+    def param_apply(self, func_name: str, params: Vec3) -> Nut:
         dst = copy.deepcopy(self)
         dst = dst.param_apply(func_name, params)
         dst.thread = self.thread.param_apply(func_name, params)
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     handle_depth = 3
     flat_ratio = 0.3
     nat_h = 10
-    thread = ScrewThread(
+    thread = Screw(
         tooth_height=tooth_height,
         tooth_width=tooth_width,
         screw_height=screw_height,
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         handle_depth=handle_depth,
         flat_ratio=flat_ratio,
     )
-    nat = ScrewNat(
+    nat = Nut(
         tooth_height=tooth_height,
         tooth_width=tooth_width,
         screw_height=screw_height,
