@@ -28,6 +28,8 @@ def param_apply(func_name: str, params: Vec3, target: OpenSCADObject|Point3D) ->
             return solid.rotate(params)(target)
         elif func_name == 'scale':
             return solid.scale(params)(target)
+        elif func_name == 'mirror':
+            return solid.mirror(params)(target)
         else:
             raise ValueError(f"Unknown function name: {func_name}")
     elif isinstance(target, Point3D):
@@ -73,6 +75,14 @@ class Point3D:
         sx, sy, sz = scale_factors
         return Point3D(self.x * sx, self.y * sy, self.z * sz)
     
+    def mirror(self, axis: Vec3) -> Point3D:
+        mx, my, mz = axis
+        return Point3D(
+            -self.x if mx else self.x,
+            -self.y if my else self.y,
+            -self.z if mz else self.z
+        )
+    
     def _param_apply(self, func_name: str, params: Vec3) -> Point3D:
         if func_name == 'translate':
             return self.translate(params)
@@ -80,6 +90,8 @@ class Point3D:
             return self.rotate(params)
         elif func_name == 'scale':
             return self.scale(params)
+        elif func_name == 'mirror':
+            return self.mirror(params)
         else:
             raise ValueError(f"Unknown function name: {func_name}")
 
@@ -140,6 +152,8 @@ class SolxObject:
             return SolxObject(openscad_node=solid.rotate(params)(self.node))
         elif func_name == 'scale':
             return SolxObject(openscad_node=solid.scale(params)(self.node))
+        elif func_name == 'mirror':
+            return SolxObject(openscad_node=solid.mirror(params)(self.node))
         else:
             raise ValueError(f"Unknown function name: {func_name}")
 
@@ -153,6 +167,8 @@ class SolxObject:
         return self.param_apply('rotate', rotation_angles)
     def scale(self, scale_factors: Vec3) -> Self:
         return self.param_apply('scale', scale_factors)
+    def mirror(self, axis: Vec3) -> Self:
+        return self.param_apply('mirror', axis)
 
     def copy(self) -> Self:
         return copy.deepcopy(self)

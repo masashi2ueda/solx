@@ -6,12 +6,12 @@ from typing import TypeVar
 
 from solid import screw_thread
 
-from solx.core import SolxObject, Vec3
+from solx.core import SolxObject, Vec3, param_apply
 from solx.primitives import CenterType, Cube, Cylinder
 
 T = TypeVar("T", bound=SolxObject)
 
-
+# %%
 def create_trapezoid_thread(
     tooth_height: float,
     tooth_width: float,
@@ -45,6 +45,7 @@ class Screw(SolxObject):
         handle_width: float,
         handle_depth: float,
         flat_ratio: float = 0.3,
+        inverse_thread_dicrection: bool = False,
     ):
         pts = create_trapezoid_thread(
             tooth_height=tooth_height,
@@ -65,6 +66,9 @@ class Screw(SolxObject):
             neck_out_degrees=30,
         )
         thread = SolxObject(thread)
+        if inverse_thread_dicrection:
+            thread = thread.mirror((0, 0, 1))
+            thread = thread.translate((0, 0, screw_height))
         cylinder = Cylinder(
             radius=screw_radius + 0.01,
             height=screw_height + handle_height,
@@ -95,6 +99,7 @@ class Nut(SolxObject):
         z_mgn = 2,
         nat_offset_xy = 2,
         flat_ratio: float = 0.3,
+        inverse_thread_dicrection: bool = False,
     ):
         thread_for_nat = Screw(
             tooth_height=tooth_height + th_mgn,
@@ -106,18 +111,23 @@ class Nut(SolxObject):
             handle_width=0,
             handle_depth=0,
             flat_ratio=flat_ratio,
+            inverse_thread_dicrection=inverse_thread_dicrection,
         )
         nat_width = (screw_radius + tooth_height) * 2 + nat_offset_xy
         nat_depth = nat_width
         nat_cube = Cube(size=(nat_width, nat_depth, nat_h), center=CenterType.BOTTOM_CENTER)
-        nat_cube -= thread_for_nat.translate((0, 0, z_mgn))
-        super().__init__(nat_cube.node)
-        self.thread = thread_for_nat
+        thread_for_nat = thread_for_nat.translate((0, 0, z_mgn))
+        nat_cube -= thread_for_nat
+        super().__init__(openscad_node=nat_cube.node)
+        self.thread = copy.deepcopy(thread_for_nat)
+        self.w = nat_width
+        self.d = nat_depth
+        self.h = nat_h
 
 
     def param_apply(self, func_name: str, params: Vec3) -> Nut:
         dst = copy.deepcopy(self)
-        dst = dst.param_apply(func_name, params)
+        dst.node = param_apply(func_name, params, dst.node)
         dst.thread = self.thread.param_apply(func_name, params)
         return dst
     
@@ -149,11 +159,14 @@ if __name__ == "__main__":
         handle_depth=handle_depth,
         flat_ratio=flat_ratio,
     )
-    nat = Nut(
+    nut = Nut(
         tooth_height=tooth_height,
         tooth_width=tooth_width,
         screw_height=screw_height,
         screw_radius=screw_radius,
         rotation_cnt=rotation_cnt,
         nat_h=nat_h,)
-    (thread+ nat).render()
+    (thread+ nut).render()
+    nut = nut.translate((0, 0, screw_height + 5))
+    nut = nut.rotate((0, 0, 15))
+# %%

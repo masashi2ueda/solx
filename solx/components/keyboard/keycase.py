@@ -1,5 +1,7 @@
 # %%
 from solx import Cube, Cylinder, HollowCube, PolygonExtrude
+from solx.components.magnet.magnet_cylinder32 import MagnetCube32
+from solx.components.screw.thread_nat import Nut, Screw
 from solx.primitives.types import CenterType
 
 LARGE_VAL = 100
@@ -11,7 +13,7 @@ LARGE_VAL = 100
 #  |   pt4-----pt5       |
 # pt2--pt3     pt6------pt7
 btm_h2 = 2.0
-btm_h1 = 10.0
+btm_h1 = 13.0
 btm_h0 = 0.5
 
 btm_out_mgn = 1.0
@@ -271,7 +273,6 @@ mag_y = pcb_out_pts[0][1] - mag_dy
 mag_x_btm = btm_pts[0][0]
 mag_x_top = top_subt_btm_pts[0][0]
 cx = Cube((30, 1, 1),center=CenterType.CENTER)
-from solx.components.magnet.magnet_cylinder32 import MagnetCube32
 
 mag_hole_cube = MagnetCube32()
 mag_hole_cube_top = mag_hole_cube.rotate((0, -90, 0))
@@ -283,19 +284,106 @@ mag_hole_cube_btm = mag_hole_cube_btm.translate((mag_x_btm, mag_y, mag_z))
 mag_hole_cube_btm = mag_hole_cube_btm.translate((-mag_hole_cube.h, 0, 0))
 btm_case = mag_hole_cube_btm.add_to(btm_case)
 
-# mag_cyl_l0 = mag_cyl.copy()
-# mag_cyl_r0 = mag_cyl.translate((-mc32.h, 0, 0))
-# dst += cx.translate((mag_x_btm, mag_y, mag_z))
-# dst += mag_cyl_r0
-# dst -= mag_cyl_r0.translate((mag_x_btm, mag_y, mag_z))
-# dst -= mag_cyl_l0.translate((mag_x_top, mag_y, mag_z))
 
+##################
+# arm rest bar
+##################
+v_bar_w = 3.0
+v_bar_d = 30.0
+v_bar_h = 3.0
+v_bar_dx = 35.0
+v_bar_dz = 3.0
+v_bar = Cube(size=(v_bar_w, v_bar_d, v_bar_h))
+v_bar_dy = btm_case.bottom_pts[2].y - v_bar_d / 2
+v_bar = v_bar.translate((0, v_bar_dy, v_bar_dz))
+btm_case += v_bar.translate((v_bar_dx, 0, 0))
+btm_case += v_bar.translate((-v_bar_dx, 0, 0))
+cyl_bar = Cylinder(radius=v_bar_h/2, height=v_bar_dx * 2)
+cyl_bar = cyl_bar.rotate((0, 90, 0))
+cyl_dy = v_bar_dy - v_bar_d / 2 + v_bar_h / 2
+cyl_dz = v_bar_dz + v_bar_h / 2
+cyl_bar = cyl_bar.translate((-v_bar_dx, cyl_dy, cyl_dz))
+btm_case += cyl_bar
+
+##################
+# foot
+##################
+nut_dz = 0.0
+screw_height = 15
+screw_radius = 1.5
+tooth_height = 0.8
+tooth_width = 0.5
+rotation_cnt = 5
+handle_height = 3
+handle_width = 30
+handle_depth = 3
+flat_ratio = 0.3
+nat_h = 8.0
+nut_dy = 40.0
+t_mgn = 0.3
+thread_front = Screw(
+    tooth_height=tooth_height,
+    tooth_width=tooth_width,
+    screw_height=screw_height,
+    screw_radius=screw_radius,
+    rotation_cnt=rotation_cnt,
+    handle_height=handle_height,
+    handle_width=handle_width,
+    handle_depth=handle_depth,
+    flat_ratio=flat_ratio,
+)
+
+nut_front = Nut(
+    tooth_height=tooth_height,
+    tooth_width=tooth_width,
+    screw_height=screw_height,
+    screw_radius=screw_radius,
+    rotation_cnt=rotation_cnt,
+    nat_h=nat_h,
+    tw_mgn=t_mgn,
+    th_mgn=t_mgn,
+    tr_mgn=t_mgn
+    )
+thread_back = Screw(
+    tooth_height=tooth_height,
+    tooth_width=tooth_width,
+    screw_height=screw_height,
+    screw_radius=screw_radius,
+    rotation_cnt=rotation_cnt,
+    handle_height=handle_height,
+    handle_width=handle_width,
+    handle_depth=handle_depth,
+    flat_ratio=flat_ratio,
+    inverse_thread_dicrection=True,
+)
+nut_back = Nut(
+    tooth_height=tooth_height,
+    tooth_width=tooth_width,
+    screw_height=screw_height,
+    screw_radius=screw_radius,
+    rotation_cnt=rotation_cnt,
+    nat_h=nat_h,
+    tw_mgn=t_mgn,
+    th_mgn=t_mgn,
+    tr_mgn=t_mgn,
+    inverse_thread_dicrection=True,
+    )
+r_x = btm_case.bottom_pts[2].x
+dz = nut_dz + nut_back.w / 2
+nut_front = nut_front.rotate((0, -90, dz))
+nut_back = nut_back.rotate((0, -90, dz))
+nut_front = nut_front.translate((r_x, 0, dz))
+nut_back = nut_back.translate((r_x, 0, dz))
+
+nut_front = nut_front.translate((0, -nut_dy, 0))
+nut_back = nut_back.translate((0, nut_dy, 0))
+btm_case = nut_front.add_to(btm_case)
+btm_case = nut_back.add_to(btm_case)
 
 ##################
 # render
 ##################
 # render
-dst = btm_case + top_case
 # dst = top_case
 # dst = btm_case
 
@@ -303,228 +391,12 @@ dst = btm_case + top_case
 # subt_cube = Cube(size=(LARGE_VAL, LARGE_VAL, LARGE_VAL), center=CenterType.BOTTOM_LEFT)
 # # subt down right
 # subt_cube = subt_cube.translate((0, -LARGE_VAL, 0))
-# dst -= subt_cube
-dst.render()
+#  -= subt_cube
+from solx import config
 
-# %%
-
-large_val = 10.0
-min_val = 0.1
-
-
-######################################
-# bottom case usb space
-######################################
-#               btm_usb_offset_x
-#               ←-→
-#              |   (   )
-# pcb_left_up →|_________↕ btm_usb_offset_z
-btm_usb_offset_x = 7
-btm_usb_offset_z = 3
-
-######################################
-# bottom case battery space
-######################################
-#               bat_usb_offset_y
-#               ←-→
-#              |   (   )
-# pcb_left_up →|_________↕ bat_usb_offset_z
-######################################
-bat_usb_offset_y = 63
-bat_usb_offset_z = 2
+dst_dir_path = config.EnvConfig.OUTPUT_STL_DIR_PATH
+(top_case + btm_case).render()
+top_case.save_stl(dst_dir_path + "/top_case.stl")
+btm_case.save_stl(dst_dir_path + "/btm_case.stl")
 
 
-######################################
-# top case layout
-#####################################
-#             (top case)
-#             __________________
-#             |oo ______________↨ top_h0
-#             |oo|  _________________
-#    top_h1↨  |oo| |xxxxx(bottom case)
-#              ---↔ btm_top_mgn_xy
-#             <->: top_out_mgn
-top_h0 = 1.0
-top_h1 = 6.0
-btm_top_mgn_xy = 0.15
-top_out_mgn = 3.0
-
-######################################
-# top case around micon
-#####################################
-top_micon_wall = 1.0
-top_micon_dh = 4 + top_micon_wall
-top_micon_dw = 22.0
-top_micon_dd = 25.0
-
-######################################
-# usb
-#####################################
-usb_cnt_x = 11.0
-usb_w = 17.0
-usb_top_z = 8.0
-# usb_h = 12.0
-
-
-######################################
-# battery switch space
-#####################################
-bat_mgn_y = 30.0
-bat_mgn_z = 2.0
-bat_h = 4.0
-bat_d = 10.0
-bat_w = 5.0
-
-
-
-
-# %%
-
-
-
-
-
-# (btm_case + pcb_plate).render()
-
-
-
-
-
-pcb2topout_xy = top_out_mgn + btm_top_mgn_xy + btm_out_mgn + btm_pcb_mgn1
-btm2pcbtop = btm_h0 + btm_h1 + btm_h2
-
-
-
-
-
-
-
-
-
-
-
-# %%
-dst = btm_case
-# dst = top_case
-# dst = btm_case + top_case
-
-# mag_top_right
-mag_z = btm_h0 + btm_h1 - 2.0
-mag_dy = 5.0
-mag_y = pcb_out_pts[0][1] - mag_dy
-mag_x_btm = btm_pts[0][0]
-mag_x_top = top_subt_btm_pts[0][0]
-cx = Cube((30, 1, 1),center=CenterType.CENTER)
-from solx.components.magnet import magnet_cylinder32 as mc32
-
-mag_hole_cube = mc32.MagnetHoleCube()
-# mag_cyl = mag_cyl.rotate((0, 90, 0))
-dst += mag_hole_cube
-# mag_cyl_l0 = mag_cyl.copy()
-# mag_cyl_r0 = mag_cyl.translate((-mc32.h, 0, 0))
-# dst += cx.translate((mag_x_btm, mag_y, mag_z))
-# dst += mag_cyl_r0
-# dst -= mag_cyl_r0.translate((mag_x_btm, mag_y, mag_z))
-# dst -= mag_cyl_l0.translate((mag_x_top, mag_y, mag_z))
-
-
-only_type = ""
-# only_type = "left_top"
-# only_type = "down"
-only_type = "top"
-# only left top
-if only_type == "left_top":
-    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
-    dst -= off_cube.translate((98, -160, 0))
-    dst -= off_cube.translate((50, -250, 0))
-# only left down
-if only_type == "left_down":
-    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
-    dst -= off_cube.translate((110, -160, 0))
-    dst -= off_cube.translate((50, -100, 0))
-if only_type == "down":
-    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
-    dst -= off_cube.translate((50, -100, 0))
-if only_type == "top":
-    off_cube = Cube(size=(150, 180, 30), center=CenterType.BOTTOM_LEFT)
-    dst -= off_cube.translate((50, -250, 0))
-
-dst.render()
-dst_dir_path = "/home/uedam/dev/solx/examples/output_stl"
-dst.save_stl(f"{dst_dir_path}/case.stl")
-dst.save_scad(f"{dst_dir_path}/case.scad")
-
-# %%
-
-
-# %%
-btm_outer_case.render()
-# %%
-
-cube = Cube(size=(10, 10, 10))
-cylinder1 = Cylinder(radius=5, height=10)
-cylinder2 = Cylinder(radius=5, height=10)
-dst = cube + cylinder1.translate((5, 0, 0)) + cylinder2.translate((-5, 0, 0))
-dst.render()
-# %%
-# from solx import Cylinder
-
-# cyl = Cylinder(radius=10,height=10)
-# pt = pt3
-# base_plate_solx += cyl.translate((pt[0], pt[1], 0))
-base_plate.render()
-dst_dir_path = "/home/uedam/dev/solx/examples/output_stl"
-box.save_stl(f"{dst_dir_path}/box.stl")
-
-# %%
-mgn = 0.3
-key_h = 15.0 + mgn
-key_w = 15.0 + mgn
-
-h = 5.0
-inner_cube = Cube(size=(key_h, key_w, h))
-outer_cube = Cube(size=(key_h + 2, key_w + 2, h))
-dst = outer_cube - inner_cube
-dst.render()
-dst_dir_path = "/home/uedam/dev/solx/examples/output_stl"
-dst.save_stl(f"{dst_dir_path}/key_box_{int(mgn*100)}.stl")
-
-# %%
-# outer_plate.render()
-# # %%
-# top_height = 0.5
-# top_plate = SolxObject(linear_extrude(height=top_height)(
-#     polygon(points=outer_points)
-# ))
-
-# def set_swith_diode(index: int, x: float, y: float):
-#     global top_plate
-#     inner_cube = Cube(size=(key_h, key_w, h))
-#     inner_cube = inner_cube.translate((x, -y, 0))
-#     top_plate -= inner_cube
-
-# offset_x = 200
-# offset_y = 100
-# set_swith_diode(17, -23.0 + offset_x, -17.0 + offset_y)
-# set_swith_diode(18, -23.0 + offset_x, 0.0 + offset_y)
-# set_swith_diode(19, -23.0 + offset_x, 17.0 + offset_y)
-# set_swith_diode(20, -23.0 + offset_x, 34.0 + offset_y)
-# set_swith_diode(13, -40.0 + offset_x, -32.0 + offset_y)
-# set_swith_diode(14, -40.0 + offset_x, -15.0 + offset_y)
-# set_swith_diode(15, -40.0 + offset_x, 2.0 + offset_y)
-# set_swith_diode(9, -57.0 + offset_x, -35.0 + offset_y)
-# set_swith_diode(10, -57.0 + offset_x, -18.0 + offset_y)
-# set_swith_diode(11, -57.0 + offset_x, -1.0 + offset_y)
-# set_swith_diode(5, -74.0 + offset_x, -23.0 + offset_y)
-# set_swith_diode(6, -74.0 + offset_x, -6.0 + offset_y)
-# set_swith_diode(7, -74.0 + offset_x, 11.0 + offset_y)
-# set_swith_diode(1, -91.0 + offset_x, -17.0 + offset_y)
-# set_swith_diode(2, -91.0 + offset_x, 0.0 + offset_y)
-# set_swith_diode(3, -91.0 + offset_x, 17.0 + offset_y)
-# set_swith_diode(4, -108.0 + offset_x, 3.0 + offset_y)
-# set_swith_diode(8, -108.0 + offset_x, 20.0 + offset_y)
-# set_swith_diode(12, -109.0 + offset_x, 40.0 + offset_y)
-# set_swith_diode(16, -92.0 + offset_x, 34.0 + offset_y)
-# top_plate.render()
-# top_plate.save_stl(f"{dst_dir_path}/top_plate.stl")
-# # %%
