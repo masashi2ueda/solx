@@ -19,7 +19,7 @@ T = TypeVar("T", bound=SolxObject)
 class MagnetCylinder32(Cylinder):
     def __init__(
         self,
-        radius: float = 1.6,
+        radius: float = 1.8,
         height: float = 2.1,
         center: CenterType = DefautltCenterType,
         segments: int = 32,

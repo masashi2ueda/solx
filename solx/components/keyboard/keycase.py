@@ -1,5 +1,5 @@
 # %%
-from solx import Cube, Cylinder, HollowCube, PolygonExtrude
+from solx import Cube, Cylinder, HollowCube, PolygonExtrude, config
 from solx.components.magnet.magnet_cylinder32 import MagnetCube32
 from solx.components.screw.thread_nat import Nut, Screw
 from solx.primitives.types import CenterType
@@ -40,9 +40,9 @@ usb_top_z = 8.0
 
 # battery switch space
 bat_mgn_y = 30.0
-bat_mgn_z = 2.0
+bat_mgn_z = 5.0
 bat_h = 4.0
-bat_d = 10.0
+bat_d = 12.0
 bat_w = 5.0
 bat_wall = 1.0
 
@@ -288,22 +288,31 @@ btm_case = mag_hole_cube_btm.add_to(btm_case)
 ##################
 # arm rest bar
 ##################
+cyl_h = 13
+cyl_r = 2.5
 v_bar_w = 3.0
-v_bar_d = 30.0
-v_bar_h = 3.0
-v_bar_dx = 35.0
+v_bar_dd = 7.0
+v_bar_h = cyl_r * 2
+v_bar_dx = 45.0
 v_bar_dz = 3.0
+
+
+v_bar_d = btm2top_out + v_bar_dd + 2
 v_bar = Cube(size=(v_bar_w, v_bar_d, v_bar_h))
 v_bar_dy = btm_case.bottom_pts[2].y - v_bar_d / 2
 v_bar = v_bar.translate((0, v_bar_dy, v_bar_dz))
-btm_case += v_bar.translate((v_bar_dx, 0, 0))
-btm_case += v_bar.translate((-v_bar_dx, 0, 0))
-cyl_bar = Cylinder(radius=v_bar_h/2, height=v_bar_dx * 2)
+dx = cyl_h/2 + v_bar_w / 2
+base_bar = v_bar.translate((dx, 0, 0))
+base_bar += v_bar.translate((-dx, 0, 0))
+cyl_bar = Cylinder(radius=cyl_r, height=cyl_h)
 cyl_bar = cyl_bar.rotate((0, 90, 0))
-cyl_dy = v_bar_dy - v_bar_d / 2 + v_bar_h / 2
+cyl_dy = v_bar_dy - v_bar_d / 2 + cyl_r
 cyl_dz = v_bar_dz + v_bar_h / 2
-cyl_bar = cyl_bar.translate((-v_bar_dx, cyl_dy, cyl_dz))
-btm_case += cyl_bar
+cyl_bar = cyl_bar.translate((-cyl_h/2, cyl_dy, cyl_dz))
+base_bar += cyl_bar
+base_bar1 = base_bar.translate((v_bar_dx, 0, 0))
+base_bar2 = base_bar.translate((-v_bar_dx, 0, 0))
+btm_case += (base_bar1 + base_bar2)
 
 ##################
 # foot
@@ -315,7 +324,7 @@ tooth_height = 0.8
 tooth_width = 0.5
 rotation_cnt = 5
 handle_height = 3
-handle_width = 30
+handle_width = 35
 handle_depth = 3
 flat_ratio = 0.3
 nat_h = 8.0
@@ -380,23 +389,55 @@ nut_back = nut_back.translate((0, nut_dy, 0))
 btm_case = nut_front.add_to(btm_case)
 btm_case = nut_back.add_to(btm_case)
 
+# %%
 ##################
 # render
 ##################
-# render
-# dst = top_case
-# dst = btm_case
+RL = 200.0
+dst_top = top_case.copy()
+dst_btm = btm_case.copy()
 
-# # subt up right
-# subt_cube = Cube(size=(LARGE_VAL, LARGE_VAL, LARGE_VAL), center=CenterType.BOTTOM_LEFT)
-# # subt down right
-# subt_cube = subt_cube.translate((0, -LARGE_VAL, 0))
-#  -= subt_cube
-from solx import config
+offset_x = 0
+offset_y = 0
+
+dst_top = dst_top.translate((offset_x, offset_y, 0))
+dst_btm = dst_btm.translate((offset_x, offset_y, 0))
+
+is_subt_front = False
+is_subt_back = False
+is_subt_right = False
+is_subt_left = False
+
+# is_subt_front = True
+is_subt_back = True
+# is_subt_right = True
+# is_subt_left = True
+
+base_cube = Cube(size=(RL, RL, RL), center=CenterType.BOTTOM_CENTER)
+# 手前を引く
+if is_subt_front:
+    front_cube = base_cube.translate((0, - RL / 2, 0))
+    dst_top -= front_cube
+    dst_btm -= front_cube
+# 奥を引く
+if is_subt_back:
+    back_cube = base_cube.translate((0, RL / 2, 0))
+    dst_top -= back_cube
+    dst_btm -= back_cube
+# 右を引く
+if is_subt_right:
+    s_cube = base_cube.translate((RL / 2, 0, 0))
+    dst_top -= s_cube
+    dst_btm -= s_cube
+# # 左を引く
+if is_subt_left:
+    s_cube = base_cube.translate((-RL / 2, 0, 0))
+    dst_top -= s_cube
+    dst_btm -= s_cube
 
 dst_dir_path = config.EnvConfig.OUTPUT_STL_DIR_PATH
-(top_case + btm_case).render()
-top_case.save_stl(dst_dir_path + "/top_case.stl")
-btm_case.save_stl(dst_dir_path + "/btm_case.stl")
+(dst_top + dst_btm).render()
+dst_top.save_stl(dst_dir_path + "/top_case.stl")
+dst_btm.save_stl(dst_dir_path + "/btm_case.stl")
 
-
+# %%
