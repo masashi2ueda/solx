@@ -21,6 +21,7 @@ class SlottedBearing(SolxObject):
         slot_width_wide: float = 5.0,
         slot_depth_wide: float = 2.0,
         clearance_margin: float = 0.3,
+        wide_ty_rate: float = 1/3,
     ):
         """
         Args:
@@ -45,7 +46,7 @@ class SlottedBearing(SolxObject):
 
         # Wide inner slot
         wide_slot = Cube(size=(slot_width_wide, slot_depth_wide, height))
-        wide_slot_ty = -inner_radius - (outer_radius - inner_radius) / 2
+        wide_slot_ty = -inner_radius - (outer_radius - inner_radius) * wide_ty_rate
         wide_slot = wide_slot.translate((0, wide_slot_ty, 0))
         cyl -= wide_slot
 
@@ -64,7 +65,6 @@ class SlottedBearing(SolxObject):
         dst.node = param_apply(func_name, params, self.node)
         dst.inset = self.inset.param_apply(func_name, params)
         return dst
-
 
 class ArmRestPlate(SolxObject):
     def __init__(
@@ -113,7 +113,8 @@ class ArmRest(SolxObject):
         bearing_slot_width_narrow=3.0,
         bearing_slot_width_wide=5.0,
         bearing_slot_depth_wide=2.0,
-        bearing_clearance_margin=0.3
+        bearing_clearance_margin=0.3,
+        bearing_wide_ty_rate: float = 1/3,
     ):
         # plate
         arm_rest_plate = ArmRestPlate(
@@ -141,11 +142,12 @@ class ArmRest(SolxObject):
             slot_width_wide=bearing_slot_width_wide,
             slot_depth_wide=bearing_slot_depth_wide,
             clearance_margin=bearing_clearance_margin,
+            wide_ty_rate=bearing_wide_ty_rate,
         )
         slotted_bearing = slotted_bearing.rotate((90, 0, 0))
         slotted_bearing = slotted_bearing.rotate((0, 0, 90))
         slotted_bearing = slotted_bearing.rotate((180, 0, 0))
-        slot_dz = cube_h + cube_dz + bearing_outer_radius - 2
+        slot_dz = cube_h + cube_dz + bearing_outer_radius - 1
         slotted_bearing = slotted_bearing.translate((-bearing_height/2, cube_dy, slot_dz))
         dst += slotted_bearing.translate((c_cube_tx_r, 0, 0))
         dst += slotted_bearing.translate((c_cube_tx_l, 0, 0))

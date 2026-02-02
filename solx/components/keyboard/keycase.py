@@ -1,5 +1,7 @@
 # %%
 from solx import Cube, Cylinder, HollowCube, PolygonExtrude, config
+from solx.components.keyboard.arm_rest import ArmRest
+from solx.components.keyboard.rubber_foot import RubberFoot
 from solx.components.magnet.magnet_cylinder32 import MagnetCube32
 from solx.components.screw.thread_nat import Nut, Screw
 from solx.primitives.types import CenterType
@@ -14,14 +16,14 @@ LARGE_VAL = 100
 # pt2--pt3     pt6------pt7
 btm_h2 = 2.0
 btm_h1 = 13.0
-btm_h0 = 0.5
+btm_h0 = 2.0
 
-btm_out_mgn = 1.0
+btm_out_mgn = 2.0
 btm_pcb_mgn1 = 0.15
 btm_pcb_mgn0 = 1.0
 
 # top case layout
-top_h0 = 1.0
+top_h0 = 2.0
 top_h1 = 6.0
 btm_top_mgn_xy = 0.15
 top_out_mgn = 3.0
@@ -48,7 +50,7 @@ bat_wall = 1.0
 
 # mouse space
 ms_right_mgn = 8.0
-ms_plate_pcb_dz = 1.0
+ms_plate_pcb_dz = 2.0
 ms_plate_thin = 2.0
 ms_scw_dx = 15.0
 ms_scw_dy1 = 6.0
@@ -63,7 +65,7 @@ mag_dy = 5.0
 btm_h = btm_h2 + btm_h1 + btm_h0
 pcb2btm_out = btm_out_mgn + btm_pcb_mgn1
 pcb2topout_xy = btm2top_out + pcb2btm_out
-mouse_plate_z = btm_h0 + btm_h1
+mouse_plate_z = btm_h0 + btm_h1 - ms_plate_pcb_dz
 
 
 
@@ -266,6 +268,12 @@ mouse_plate -= screw_hole.translate((hl_x, down_my + ms_scw_dy1, hl_z))
 mouse_plate -= screw_hole.translate((hl_x, down_my + ms_scw_dy2, hl_z))
 btm_case += mouse_plate
 
+# mouse nearby area
+mna_box = PolygonExtrude(
+    points=[(pt.x, pt.y) for pt in btm_mouse_space.bottom_pts],
+    height=mouse_plate.top_pts[0].z
+)
+btm_case += mna_box
 
 # mag_top_right
 mag_z = btm_h0 + btm_h1 - mag_dz
@@ -284,7 +292,6 @@ mag_hole_cube_btm = mag_hole_cube_btm.translate((mag_x_btm, mag_y, mag_z))
 mag_hole_cube_btm = mag_hole_cube_btm.translate((-mag_hole_cube.h, 0, 0))
 btm_case = mag_hole_cube_btm.add_to(btm_case)
 
-
 ##################
 # arm rest bar
 ##################
@@ -294,8 +301,7 @@ v_bar_w = 3.0
 v_bar_dd = 7.0
 v_bar_h = cyl_r * 2
 v_bar_dx = 45.0
-v_bar_dz = 3.0
-
+v_bar_dz = 4.0
 
 v_bar_d = btm2top_out + v_bar_dd + 2
 v_bar = Cube(size=(v_bar_w, v_bar_d, v_bar_h))
@@ -315,10 +321,49 @@ base_bar2 = base_bar.translate((-v_bar_dx, 0, 0))
 btm_case += (base_bar1 + base_bar2)
 
 ##################
+# arm rest
+##################
+arm_rest = ArmRest(
+    plate_w = 110.0,
+    plate_d = 130.0,
+    plate_h = 2.0,
+    plate_w2_ratio = 0.9,
+    # slot cube
+    cube_w = 10.0,
+    cube_d = 5.0,
+    cube_h = 5.0,
+    cube_dx = 5.0,
+    # slot ling
+    bearing_outer_radius=cyl_r + 3.5,
+    bearing_inner_radius=cyl_r + 0.5,
+    bearing_height=cyl_h - 0.2,
+    bearing_slot_width_narrow=cyl_r+2.0,
+    bearing_slot_width_wide=cyl_r+3.5,
+    bearing_slot_depth_wide=1.0,
+    bearing_clearance_margin=0.3,
+    bearing_wide_ty_rate=1/10
+)
+# arm_rest.slotted_bearing.inset.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/arm_rest_parts.stl")
+# # arm_rest = arm_rest.rotate((180, 0, 0))
+# # arm_rest = arm_rest.translate((0, -56, 18))
+# # dst = btm_case + top_case + arm_rest
+# # dst.render() 
+# dst = arm_rest
+# # LL = 1000
+# # dst -= Cube(size=(LL, LL, LL), center=CenterType.CENTER).translate((LL/2, 0, 0))
+# # dst -= Cube(size=(LL, LL, LL), center=CenterType.CENTER).translate((0, -LL/2 - 10, 0))
+# # dst.render() 
+# dst.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/arm_rest.stl")
+
+# %%
+##################
 # foot
 ##################
 nut_dz = 0.0
-screw_height = 15
+nat_h = 8.0
+nut_dy = 40.0
+t_mgn = 0.5
+screw_height = 10 + nat_h - t_mgn - 0.2 - 2.5
 screw_radius = 1.5
 tooth_height = 0.8
 tooth_width = 0.5
@@ -327,9 +372,6 @@ handle_height = 3
 handle_width = 35
 handle_depth = 3
 flat_ratio = 0.3
-nat_h = 8.0
-nut_dy = 40.0
-t_mgn = 0.3
 thread_front = Screw(
     tooth_height=tooth_height,
     tooth_width=tooth_width,
@@ -351,7 +393,8 @@ nut_front = Nut(
     nat_h=nat_h,
     tw_mgn=t_mgn,
     th_mgn=t_mgn,
-    tr_mgn=t_mgn
+    tr_mgn=t_mgn,
+    nat_offset_xy=3
     )
 thread_back = Screw(
     tooth_height=tooth_height,
@@ -388,7 +431,17 @@ nut_front = nut_front.translate((0, -nut_dy, 0))
 nut_back = nut_back.translate((0, nut_dy, 0))
 btm_case = nut_front.add_to(btm_case)
 btm_case = nut_back.add_to(btm_case)
-
+# %%
+foot_hole_r = screw_radius + tooth_height + 0.1
+foot = RubberFoot(
+    screw_r=foot_hole_r,
+    cylinder_r3=2.3,
+    cylinder_h=14.0,
+    cube_size=(10, 10, 36)
+)
+foot.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/rubber_foot.stl")
+thread_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/thread_front.stl")
+nut_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_front.stl")
 # %%
 ##################
 # render

@@ -19,13 +19,14 @@ class RubberFoot(SolxObject):
         cylinder_r1: float = 4.5,
         cylinder_r2: float = 3.5,
         cylinder_r3: float = 2.5,
+        cylinder_h: float = 14.0,
         screw_r: float = 3.0,
         hole_z_frm_top: float = 7.0,
         center: CenterType = CenterType.BOTTOM_CENTER,
     ):
         cube_w, cube_d, cube_h = cube_size
         cube = Cube(size=cube_size, center=center)
-        screw_cylinder = Cylinder(radius=screw_r, height=cube_d, center=CenterType.BOTTOM_CENTER)
+        screw_cylinder = Cylinder(radius=screw_r, height=cylinder_h, center=CenterType.BOTTOM_CENTER)
         screw_cylinder = screw_cylinder.rotate((90, 0, 0))
         screw_cylinder = screw_cylinder.translate((0, cube_d/2, 0))
         screw_cylinder = screw_cylinder.translate((0, 0, cube_h - hole_z_frm_top))
