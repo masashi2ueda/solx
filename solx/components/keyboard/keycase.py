@@ -422,8 +422,8 @@ nut_back = Nut(
     )
 r_x = btm_case.bottom_pts[2].x
 dz = nut_dz + nut_back.w / 2
-nut_front = nut_front.rotate((0, -90, dz))
-nut_back = nut_back.rotate((0, -90, dz))
+nut_front = nut_front.rotate((0, -90, 0))
+nut_back = nut_back.rotate((0, -90, 0))
 nut_front = nut_front.translate((r_x, 0, dz))
 nut_back = nut_back.translate((r_x, 0, dz))
 
@@ -462,7 +462,7 @@ is_subt_right = False
 is_subt_left = False
 
 # is_subt_front = True
-is_subt_back = True
+# is_subt_back = True
 # is_subt_right = True
 # is_subt_left = True
 
