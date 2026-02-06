@@ -4,6 +4,7 @@ from solx.components.keyboard.arm_rest import ArmRest
 from solx.components.keyboard.rubber_foot import RubberFoot
 from solx.components.magnet.magnet_cylinder32 import MagnetCube32
 from solx.components.screw.thread_nat import Nut, Screw
+from solx.primitives.rounded_cube import RoundedCube
 from solx.primitives.types import CenterType
 
 LARGE_VAL = 100
@@ -154,7 +155,6 @@ top_case -= sbt_btm_case
 # subtract half h
 sbt_btm_case = PolygonExtrude(points=top_points,height=btm_h - top_h1)
 top_case -= sbt_btm_case
-
 
 # around micon
 cw = top_micon_dw + pcb2topout_xy + top_micon_wall
@@ -354,7 +354,35 @@ arm_rest = ArmRest(
 # # dst -= Cube(size=(LL, LL, LL), center=CenterType.CENTER).translate((0, -LL/2 - 10, 0))
 # # dst.render() 
 # dst.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/arm_rest.stl")
+# %%
+##################
+# around mouse top plate
+##################
+dst = top_case.copy()
 
+pt_tr = mouse_subt_cube.bottom_pts[0]
+pt_dr = mouse_subt_cube.bottom_pts[3]
+
+rx = mouse_subt_cube.bottom_pts[3].x
+by = mouse_subt_cube.bottom_pts[3].y
+ty = mouse_subt_cube.bottom_pts[0].y
+lx = rx - 10.0
+bz = btm_h
+tz = top_h0 + btm_h
+cube = Cube(size=(rx - lx, ty - by, tz - bz), center=CenterType.BOTTOM_LEFT)
+
+rc_w = 20
+rc_d = 25
+rc = RoundedCube(size = (rc_w, rc_d, 20), radius=5, segments=32, center=CenterType.BOTTOM_LEFT)
+tdx = 3
+tdy = 5
+rc = rc.translate((-rc_w/2-tdx, tdy, 0))
+cube = cube - rc
+cube = cube.translate((lx, ty - (ty - by), bz))
+dst += cube
+dst.render()
+# %%
+rc.render()
 # %%
 ##################
 # foot
@@ -372,6 +400,8 @@ handle_height = 3
 handle_width = 35
 handle_depth = 3
 flat_ratio = 0.3
+nat_offset_xy = 3
+hole_dx = 1.0
 thread_front = Screw(
     tooth_height=tooth_height,
     tooth_width=tooth_width,
@@ -384,18 +414,6 @@ thread_front = Screw(
     flat_ratio=flat_ratio,
 )
 
-nut_front = Nut(
-    tooth_height=tooth_height,
-    tooth_width=tooth_width,
-    screw_height=screw_height,
-    screw_radius=screw_radius,
-    rotation_cnt=rotation_cnt,
-    nat_h=nat_h,
-    tw_mgn=t_mgn,
-    th_mgn=t_mgn,
-    tr_mgn=t_mgn,
-    nat_offset_xy=3
-    )
 thread_back = Screw(
     tooth_height=tooth_height,
     tooth_width=tooth_width,
@@ -408,6 +426,18 @@ thread_back = Screw(
     flat_ratio=flat_ratio,
     inverse_thread_dicrection=True,
 )
+nut_front = Nut(
+    tooth_height=tooth_height,
+    tooth_width=tooth_width,
+    screw_height=screw_height,
+    screw_radius=screw_radius,
+    rotation_cnt=rotation_cnt,
+    nat_h=nat_h,
+    tw_mgn=t_mgn,
+    th_mgn=t_mgn,
+    tr_mgn=t_mgn,
+    nat_offset_xy=nat_offset_xy
+    )
 nut_back = Nut(
     tooth_height=tooth_height,
     tooth_width=tooth_width,
@@ -419,7 +449,8 @@ nut_back = Nut(
     th_mgn=t_mgn,
     tr_mgn=t_mgn,
     inverse_thread_dicrection=True,
-    )
+    nat_offset_xy=nat_offset_xy
+)
 r_x = btm_case.bottom_pts[2].x
 dz = nut_dz + nut_back.w / 2
 nut_front = nut_front.rotate((0, -90, 0))
@@ -427,10 +458,14 @@ nut_back = nut_back.rotate((0, -90, 0))
 nut_front = nut_front.translate((r_x, 0, dz))
 nut_back = nut_back.translate((r_x, 0, dz))
 
-nut_front = nut_front.translate((0, -nut_dy, 0))
-nut_back = nut_back.translate((0, nut_dy, 0))
-btm_case = nut_front.add_to(btm_case)
-btm_case = nut_back.add_to(btm_case)
+nut_front = nut_front.translate((hole_dx, -nut_dy, 0))
+nut_back = nut_back.translate((hole_dx, nut_dy, 0))
+# btm_case = nut_front.add_to(btm_case)
+# btm_case = nut_back.add_to(btm_case)
+btm_case -= nut_front.nat_hole_cube
+btm_case -= nut_back.nat_hole_cube
+nut_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_front.stl")
+nut_back.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_back.stl")
 # %%
 foot_hole_r = screw_radius + tooth_height + 0.1
 foot = RubberFoot(
@@ -450,8 +485,8 @@ RL = 200.0
 dst_top = top_case.copy()
 dst_btm = btm_case.copy()
 
-offset_x = 0
-offset_y = 0
+offset_x = 0#55
+offset_y = 0#30
 
 dst_top = dst_top.translate((offset_x, offset_y, 0))
 dst_btm = dst_btm.translate((offset_x, offset_y, 0))

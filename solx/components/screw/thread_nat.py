@@ -100,6 +100,7 @@ class Nut(SolxObject):
         nat_offset_xy = 2,
         flat_ratio: float = 0.3,
         inverse_thread_dicrection: bool = False,
+        nat_hole_d: float = 0.1
     ):
         thread_for_nat = Screw(
             tooth_height=tooth_height + th_mgn,
@@ -116,6 +117,7 @@ class Nut(SolxObject):
         nat_width = (screw_radius + tooth_height) * 2 + nat_offset_xy
         nat_depth = nat_width
         nat_cube = Cube(size=(nat_width, nat_depth, nat_h), center=CenterType.BOTTOM_CENTER)
+        nat_hole_cube = Cube(size=(nat_width+nat_hole_d, nat_depth + nat_hole_d, nat_h), center=CenterType.BOTTOM_CENTER)
         thread_for_nat = thread_for_nat.translate((0, 0, z_mgn))
         nat_cube -= thread_for_nat
         super().__init__(openscad_node=nat_cube.node)
@@ -123,12 +125,14 @@ class Nut(SolxObject):
         self.w = nat_width
         self.d = nat_depth
         self.h = nat_h
+        self.nat_hole_cube = nat_hole_cube
 
 
     def param_apply(self, func_name: str, params: Vec3) -> Nut:
         dst = copy.deepcopy(self)
         dst.node = param_apply(func_name, params, dst.node)
         dst.thread = self.thread.param_apply(func_name, params)
+        dst.nat_hole_cube = self.nat_hole_cube.param_apply(func_name, params)
         return dst
     
     def add_to(self, base: T) -> T:
