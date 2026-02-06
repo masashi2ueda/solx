@@ -358,7 +358,6 @@ arm_rest = ArmRest(
 ##################
 # around mouse top plate
 ##################
-dst = top_case.copy()
 
 pt_tr = mouse_subt_cube.bottom_pts[0]
 pt_dr = mouse_subt_cube.bottom_pts[3]
@@ -373,17 +372,16 @@ cube = Cube(size=(rx - lx, ty - by, tz - bz), center=CenterType.BOTTOM_LEFT)
 
 rc_w = 20
 rc_d = 25
-rc = RoundedCube(size = (rc_w, rc_d, 20), radius=5, segments=32, center=CenterType.BOTTOM_LEFT)
-tdx = 3
-tdy = 5
+rc = RoundedCube(size = (rc_w, rc_d, 20), radius=7, segments=32, center=CenterType.BOTTOM_LEFT)
+tdx = 0
+tdy = 8
 rc = rc.translate((-rc_w/2-tdx, tdy, 0))
+# cube = cube - rc
 cube = cube - rc
 cube = cube.translate((lx, ty - (ty - by), bz))
-dst += cube
-dst.render()
-# %%
-rc.render()
-# %%
+# (top_case + cube).render()
+top_case += cube
+# dst.render()
 ##################
 # foot
 ##################
@@ -515,17 +513,20 @@ if is_subt_back:
 # 右を引く
 if is_subt_right:
     s_cube = base_cube.translate((RL / 2, 0, 0))
+    s_cube = s_cube.translate((50, 0, 0))
     dst_top -= s_cube
     dst_btm -= s_cube
 # # 左を引く
 if is_subt_left:
     s_cube = base_cube.translate((-RL / 2, 0, 0))
+    s_cube = s_cube.translate((20, 0, 0))
     dst_top -= s_cube
     dst_btm -= s_cube
 
 dst_dir_path = config.EnvConfig.OUTPUT_STL_DIR_PATH
-(dst_top + dst_btm).render()
+dst_top.render()
+# (dst_top + dst_btm).render()
 dst_top.save_stl(dst_dir_path + "/top_case.stl")
-dst_btm.save_stl(dst_dir_path + "/btm_case.stl")
+# dst_btm.save_stl(dst_dir_path + "/btm_case.stl")
 
 # %%
