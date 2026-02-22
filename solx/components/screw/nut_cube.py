@@ -1,4 +1,31 @@
 # %%
+from solx import config
+from solx.primitives import CenterType, Cube, Cylinder
+
+nut_cube_h = 11.0
+nut_cube_wd = 8.125
+
+nut_r = 3.0
+nut_r_clr = 0.2
+nut_h = 3.0
+
+cube = Cube((nut_cube_wd, nut_cube_wd, nut_cube_h), center=CenterType.BOTTOM_CENTER)
+cube.render()
+
+r = nut_r + nut_r_clr
+cylinder = Cylinder(radius=r, height=nut_h, segments=6,center=CenterType.BOTTOM_CENTER)
+cylinder.render()
+
+tz = nut_cube_h - nut_h
+cylinder = cylinder.translate((0, 0, tz))
+
+cube -= cylinder
+cube.render()
+
+dst_path = config.EnvConfig.OUTPUT_STL_DIR_PATH + "/mat_nut_cube.stl"
+cube.save_stl(dst_path)
+
+# %%
 from __future__ import annotations
 
 import copy
@@ -68,7 +95,7 @@ class Screw(SolxObject):
         thread = SolxObject(thread)
         if inverse_thread_dicrection:
             thread = thread.mirror((0, 0, 1))
-            thread = thread.translate((0, 0, screw_height + handle_height))
+            thread = thread.translate((0, 0, screw_height))
         cylinder = Cylinder(
             radius=screw_radius + 0.01,
             height=screw_height + handle_height,
@@ -185,7 +212,7 @@ rubeer_foot_screw_r_c = 0.25
 rubeer_foot_screw_wd_mgn = 2.0
 
 # screw
-is_inverse = True
+is_inverse = False
 tooth_height = 0.7
 tooth_width = 1.0
 rotation_cnt = 7.5
@@ -239,7 +266,6 @@ dst_path = f"{config.EnvConfig.OUTPUT_STL_DIR_PATH}/screw.stl"
 if is_inverse:
     dst_path = dst_path.replace("screw.stl", "screw_inverse.stl")
 screw.save_stl(dst_path)
-
 # %%
 thread_for_nut = Screw(
     tooth_height=nut_screw_tooth_height,

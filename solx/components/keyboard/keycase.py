@@ -8,6 +8,7 @@ from solx.primitives.rounded_cube import RoundedCube
 from solx.primitives.types import CenterType
 
 LARGE_VAL = 100
+LR = "L"
 ##### case point layout
 #  ↑y
 # →x
@@ -68,21 +69,17 @@ pcb2btm_out = btm_out_mgn + btm_pcb_mgn1
 pcb2topout_xy = btm2top_out + pcb2btm_out
 mouse_plate_z = btm_h0 + btm_h1 - ms_plate_pcb_dz
 
-
-
-
-
 def shift_pcb_points(pts, mgn):
-    outer_direstion = [
-        ( +1, +1),  # pt0
-        ( -1, +1),  # pt1
-        ( -1, -1),  # pt2
-        ( +1, -1),  # pt3
-        ( +1, -1),  # pt4
-        ( -1, -1),  # pt5
-        ( -1, -1),  # pt6
-        ( +1, -1),  # pt7
-    ]
+    outer_direstion = []
+    outer_direstion.append(( +1, +1))  # pt0
+    outer_direstion.append(( -1, +1))  # pt1
+    outer_direstion.append(( -1, -1))  # pt2
+    if LR == "R":
+        outer_direstion.append(( +1, -1))  # pt3
+        outer_direstion.append(( +1, -1))  # pt4
+        outer_direstion.append(( -1, -1))  # pt5
+        outer_direstion.append(( -1, -1))  # pt6
+    outer_direstion.append(( +1, -1))  # pt7
     dst_points = [
         (
             pts[i][0] + outer_direstion[i][0] * mgn,
@@ -92,7 +89,16 @@ def shift_pcb_points(pts, mgn):
     return dst_points
 
 # R
-pcb_out_pts_raw = [(189.0, 55.0), (77.0, 55.0), (77.0, 150.0), (118.0, 150.0), (118.0, 121.0), (158.895, 121.0), (158.895, 150.0), (189.0, 150.0)]
+pcb_out_pts_raw = []
+pcb_out_pts_raw.append((189.0, 55.0))# 0
+pcb_out_pts_raw.append((77.0, 55.0))# 1
+pcb_out_pts_raw.append((77.0, 150.0))#2
+if LR == "R":
+    pcb_out_pts_raw.append((118.0, 150.0))#3
+    pcb_out_pts_raw.append((118.0, 121.0))#4
+    pcb_out_pts_raw.append((158.895, 121.0))#5
+    pcb_out_pts_raw.append((158.895, 150.0))#6
+pcb_out_pts_raw.append((189.0, 150.0))#7
 
 ##################
 # bottom case
@@ -123,22 +129,23 @@ btm_pcb_space = PolygonExtrude(points=btm_pcb_space_pts,height=btm_h2)
 btm_pcb_space = btm_pcb_space.translate((0, 0, btm_h0 + btm_h1))
 btm_case -= btm_pcb_space
 
-# for mouse space
-btm_ms_mgn = pcb2btm_out + btm_pcb_mgn0
-btm_ms_x = btm_pts[5][0]
-btm_ms_y0 = btm_pts[5][1] + btm_ms_mgn
-btm_ms_y1 = btm_pts[6][1]
-btm_mouse_pts = [
-    (btm_ms_x, btm_ms_y0),
-    (btm_ms_x, btm_ms_y1),
-    (btm_ms_x + btm_ms_mgn, btm_ms_y1),
-    (btm_ms_x + btm_ms_mgn, btm_ms_y0)
-]
-btm_mouse_space = PolygonExtrude(points=btm_mouse_pts,height=btm_h2+btm_h1+btm_h0)
-btm_case -= btm_mouse_space
+if LR == "R":
+    # for mouse space
+    btm_ms_mgn = pcb2btm_out + btm_pcb_mgn0
+    btm_ms_x = btm_pts[5][0]
+    btm_ms_y0 = btm_pts[5][1] + btm_ms_mgn
+    btm_ms_y1 = btm_pts[6][1]
+    btm_mouse_pts = [
+        (btm_ms_x, btm_ms_y0),
+        (btm_ms_x, btm_ms_y1),
+        (btm_ms_x + btm_ms_mgn, btm_ms_y1),
+        (btm_ms_x + btm_ms_mgn, btm_ms_y0)
+    ]
+    btm_mouse_space = PolygonExtrude(points=btm_mouse_pts,height=btm_h2+btm_h1+btm_h0)
+    btm_case -= btm_mouse_space
 
-# (btm_case).render()
-
+(btm_case).render()
+# %%
 ##################
 # top case
 ##################
@@ -198,7 +205,7 @@ bsw_c = HollowCube(
 bsw_c = bsw_c.translate((org_x, org_y, org_z))
 top_case = bsw_c.add_to(top_case)
 
-# key switch spae
+# key switch space
 def set_swith_diode(index: int, x: float, y: float):
     global top_case, cx, cy
     mgn = 0.3
@@ -207,6 +214,7 @@ def set_swith_diode(index: int, x: float, y: float):
     inner_cube = Cube(size=(key_h, key_w, 100))
     inner_cube = inner_cube.translate((x - cx, -y - cy, 0))
     top_case -= inner_cube
+
 offset_x = 200
 offset_y = 100
 set_swith_diode(17, -23.0 + offset_x, -17.0 + offset_y)
@@ -230,50 +238,57 @@ set_swith_diode(8, -108.0 + offset_x, 20.0 + offset_y)
 set_swith_diode(12, -109.0 + offset_x, 40.0 + offset_y)
 set_swith_diode(16, -92.0 + offset_x, 34.0 + offset_y)
 
+if LR == "L":
+    set_swith_diode(8, -40.0 + offset_x, 19.0 + offset_y)
+    set_swith_diode(12, -57.0 + offset_x, 16.0 + offset_y)
+    set_swith_diode(21, -75.0 + offset_x, 34.0 + offset_y)
 
-# subtract mouse space
-right_mx = pcb_out_pts[5][0] + ms_right_mgn
-left_mx = pcb_out_pts[4][0]
-up_my = pcb_out_pts[5][1]
-down_my = top_points[6][1]
-ms_pt0 = (right_mx, up_my)
-ms_pt1= (left_mx, up_my)
-ms_pt2= (left_mx, down_my)
-ms_pt3 = (right_mx, down_my)
-mouse_subt_cube = PolygonExtrude(
-    points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
-    height=LARGE_VAL
-)
-top_case -= mouse_subt_cube.translate((0, 0, 0))
-btm_case -= mouse_subt_cube.translate((0, 0, mouse_plate_z))
 
-# mouse plate
-right_mx = pcb_out_pts[5][0]
-left_mx = pcb_out_pts[4][0]
-up_my = pcb_out_pts[5][1]
-down_my = pcb_out_pts[6][1]
-ms_pt0 = (right_mx, up_my)
-ms_pt1= (left_mx, up_my)
-ms_pt2= (left_mx, down_my)
-ms_pt3 = (right_mx, down_my)
-mouse_plate = PolygonExtrude(
-    points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
-    height=ms_plate_thin
-).translate((0, 0, mouse_plate_z - ms_plate_thin))
-# screw hole
-screw_hole = Cylinder(radius=ms_scw_l / 2, height=ms_plate_thin)
-hl_x = right_mx - ms_scw_dx
-hl_z = mouse_plate_z - ms_plate_thin
-mouse_plate -= screw_hole.translate((hl_x, down_my + ms_scw_dy1, hl_z))
-mouse_plate -= screw_hole.translate((hl_x, down_my + ms_scw_dy2, hl_z))
-btm_case += mouse_plate
+# %%
+if LR == "R":
+    # subtract mouse space
+    right_mx = pcb_out_pts[5][0] + ms_right_mgn
+    left_mx = pcb_out_pts[4][0]
+    up_my = pcb_out_pts[5][1]
+    down_my = top_points[6][1]
+    ms_pt0 = (right_mx, up_my)
+    ms_pt1= (left_mx, up_my)
+    ms_pt2= (left_mx, down_my)
+    ms_pt3 = (right_mx, down_my)
+    mouse_subt_cube = PolygonExtrude(
+        points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
+        height=LARGE_VAL
+    )
+    top_case -= mouse_subt_cube.translate((0, 0, 0))
+    btm_case -= mouse_subt_cube.translate((0, 0, mouse_plate_z))
 
-# mouse nearby area
-mna_box = PolygonExtrude(
-    points=[(pt.x, pt.y) for pt in btm_mouse_space.bottom_pts],
-    height=mouse_plate.top_pts[0].z
-)
-btm_case += mna_box
+    # mouse plate
+    right_mx = pcb_out_pts[5][0]
+    left_mx = pcb_out_pts[4][0]
+    up_my = pcb_out_pts[5][1]
+    down_my = pcb_out_pts[6][1]
+    ms_pt0 = (right_mx, up_my)
+    ms_pt1= (left_mx, up_my)
+    ms_pt2= (left_mx, down_my)
+    ms_pt3 = (right_mx, down_my)
+    mouse_plate = PolygonExtrude(
+        points=[ms_pt0, ms_pt1, ms_pt2, ms_pt3],
+        height=ms_plate_thin
+    ).translate((0, 0, mouse_plate_z - ms_plate_thin))
+    # screw hole
+    screw_hole = Cylinder(radius=ms_scw_l / 2, height=ms_plate_thin)
+    hl_x = right_mx - ms_scw_dx
+    hl_z = mouse_plate_z - ms_plate_thin
+    mouse_plate -= screw_hole.translate((hl_x, down_my + ms_scw_dy1, hl_z))
+    mouse_plate -= screw_hole.translate((hl_x, down_my + ms_scw_dy2, hl_z))
+    btm_case += mouse_plate
+
+    # mouse nearby area
+    mna_box = PolygonExtrude(
+        points=[(pt.x, pt.y) for pt in btm_mouse_space.bottom_pts],
+        height=mouse_plate.top_pts[0].z
+    )
+    btm_case += mna_box
 
 # mag_top_right
 mag_z = btm_h0 + btm_h1 - mag_dz
@@ -358,48 +373,57 @@ arm_rest = ArmRest(
 ##################
 # around mouse top plate
 ##################
+if LR == "R":
+    pt_tr = mouse_subt_cube.bottom_pts[0]
+    pt_dr = mouse_subt_cube.bottom_pts[3]
 
-pt_tr = mouse_subt_cube.bottom_pts[0]
-pt_dr = mouse_subt_cube.bottom_pts[3]
+    rx = mouse_subt_cube.bottom_pts[3].x
+    by = mouse_subt_cube.bottom_pts[3].y
+    ty = mouse_subt_cube.bottom_pts[0].y
+    lx = rx - 10.0
+    bz = btm_h
+    tz = top_h0 + btm_h
+    cube = Cube(size=(rx - lx, ty - by, tz - bz), center=CenterType.BOTTOM_LEFT)
 
-rx = mouse_subt_cube.bottom_pts[3].x
-by = mouse_subt_cube.bottom_pts[3].y
-ty = mouse_subt_cube.bottom_pts[0].y
-lx = rx - 10.0
-bz = btm_h
-tz = top_h0 + btm_h
-cube = Cube(size=(rx - lx, ty - by, tz - bz), center=CenterType.BOTTOM_LEFT)
-
-rc_w = 20
-rc_d = 25
-rc = RoundedCube(size = (rc_w, rc_d, 20), radius=7, segments=32, center=CenterType.BOTTOM_LEFT)
-tdx = 0
-tdy = 8
-rc = rc.translate((-rc_w/2-tdx, tdy, 0))
-# cube = cube - rc
-cube = cube - rc
-cube = cube.translate((lx, ty - (ty - by), bz))
-# (top_case + cube).render()
-top_case += cube
-# dst.render()
-##################
-# foot
-##################
+    rc_w = 20
+    rc_d = 25
+    rc = RoundedCube(size = (rc_w, rc_d, 20), radius=7, segments=32, center=CenterType.BOTTOM_LEFT)
+    tdx = 0
+    tdy = 8
+    rc = rc.translate((-rc_w/2-tdx, tdy, 0))
+    # cube = cube - rc
+    cube = cube - rc
+    cube = cube.translate((lx, ty - (ty - by), bz))
+    # (top_case + cube).render()
+    top_case += cube
+    # dst.render()    
+# %%
 nut_dz = 0.0
 nat_h = 8.0
 nut_dy = 40.0
-t_mgn = 0.5
+# t_mgn = 0.4
+t_mgn = 0.2
+
 screw_height = 10 + nat_h - t_mgn - 0.2 - 2.5
-screw_radius = 1.5
+# screw_radius = 1.5
 tooth_height = 0.8
 tooth_width = 0.5
 rotation_cnt = 5
-handle_height = 3
 handle_width = 35
-handle_depth = 3
+handle_height = 3
+# handle_depth = 3
 flat_ratio = 0.3
-nat_offset_xy = 3
 hole_dx = 1.0
+
+nut_wall = 0.75
+nut_all_h = btm_h - top_h1 - 1.0 # 全体の高さ
+nut_hole_d = 0.2 # 穴の余裕
+nut_offset_xy1 = 1.0
+nut_offset_xy2 = 3.0
+screw_radius = nut_all_h / 2 - nut_offset_xy1 - tooth_height - t_mgn - nut_wall - nut_hole_d * 2
+
+handle_depth = screw_radius * 2 + tooth_height * 2
+
 thread_front = Screw(
     tooth_height=tooth_height,
     tooth_width=tooth_width,
@@ -434,7 +458,7 @@ nut_front = Nut(
     tw_mgn=t_mgn,
     th_mgn=t_mgn,
     tr_mgn=t_mgn,
-    nat_offset_xy=nat_offset_xy
+    nat_offset_xy=nut_offset_xy2
     )
 nut_back = Nut(
     tooth_height=tooth_height,
@@ -447,34 +471,56 @@ nut_back = Nut(
     th_mgn=t_mgn,
     tr_mgn=t_mgn,
     inverse_thread_dicrection=True,
-    nat_offset_xy=nat_offset_xy
+    nat_offset_xy=nut_offset_xy2
 )
 r_x = btm_case.bottom_pts[2].x
-dz = nut_dz + nut_back.w / 2
-nut_front = nut_front.rotate((0, -90, 0))
-nut_back = nut_back.rotate((0, -90, 0))
-nut_front = nut_front.translate((r_x, 0, dz))
-nut_back = nut_back.translate((r_x, 0, dz))
+# dz = nut_dz + nut_back.w / 2
 
-nut_front = nut_front.translate((hole_dx, -nut_dy, 0))
-nut_back = nut_back.translate((hole_dx, nut_dy, 0))
-# btm_case = nut_front.add_to(btm_case)
-# btm_case = nut_back.add_to(btm_case)
-btm_case -= nut_front.nat_hole_cube
-btm_case -= nut_back.nat_hole_cube
+btm_nut_holw_wh = nut_all_h
+btm_nut_holw = HollowCube(
+    size=(btm_nut_holw_wh, btm_nut_holw_wh, nat_h),
+    wall_thickness=nut_wall,
+    d_pz=0
+)
+# trancer = lambda x: x.rotate((0, -90, 0)).translate((r_x, 0, 0))
+# nut_front = trancer(nut_front)
+# nut_back = trancer(nut_back)
+btm_nut_holw = btm_nut_holw.rotate((0, -90, 0)).translate((r_x, 0, btm_nut_holw_wh/2))
+
+# nut_front = nut_front.rotate((0, -90, 0))
+# nut_back = nut_back.rotate((0, -90, 0))
+# nut_front = nut_front.translate((r_x, 0, dz))
+# nut_back = nut_back.translate((r_x, 0, dz))
+
+# nut_front = nut_front.translate((hole_dx, -nut_dy, 0))
+dx = nat_h * 1/2
+btm_nut_holw_front = btm_nut_holw.translate((dx, -nut_dy, 0))
+# nut_back = nut_back.translate((hole_dx, nut_dy, 0))
+btm_nut_holw_back = btm_nut_holw.translate((dx, nut_dy, 0))
+
+btm_case = btm_nut_holw_front.add_to(btm_case)
+btm_case = btm_nut_holw_back.add_to(btm_case)
+# btm_case -= nut_front.nat_hole_cube
+# btm_case -= nut_back.nat_hole_cube
+# nut_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_front.stl")
+# nut_back.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_back.stl")
+# (top_case + btm_case_).render()
+# (btm_case_).render()
+
 nut_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_front.stl")
+thread_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/thread_front.stl")
 nut_back.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_back.stl")
-# %%
-foot_hole_r = screw_radius + tooth_height + 0.1
+thread_back.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/thread_back.stl")
+btm_nut_holw.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/btm_nut_holw.stl")
+
+foot_hole_r = screw_radius + tooth_height + 0.2
 foot = RubberFoot(
     screw_r=foot_hole_r,
     cylinder_r3=2.3,
-    cylinder_h=14.0,
+    cylinder_h=8.0,
     cube_size=(10, 10, 36)
 )
 foot.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/rubber_foot.stl")
-thread_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/thread_front.stl")
-nut_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_front.stl")
 # %%
 ##################
 # render
@@ -482,9 +528,14 @@ nut_front.save_stl(config.EnvConfig.OUTPUT_STL_DIR_PATH + "/nut_front.stl")
 RL = 200.0
 dst_top = top_case.copy()
 dst_btm = btm_case.copy()
+if LR == "L":
+    dst_top = dst_top.mirror((1, 0, 0))
+    dst_btm = dst_btm.mirror((1, 0, 0))
 
-offset_x = 0#55
-offset_y = 0#30
+# offset_x = -30
+# offset_y = -10
+offset_x = 0
+offset_y = 0
 
 dst_top = dst_top.translate((offset_x, offset_y, 0))
 dst_btm = dst_btm.translate((offset_x, offset_y, 0))
@@ -524,9 +575,9 @@ if is_subt_left:
     dst_btm -= s_cube
 
 dst_dir_path = config.EnvConfig.OUTPUT_STL_DIR_PATH
-dst_top.render()
-# (dst_top + dst_btm).render()
-dst_top.save_stl(dst_dir_path + "/top_case.stl")
-# dst_btm.save_stl(dst_dir_path + "/btm_case.stl")
+# dst_top.render()
+(dst_top + dst_btm).render()
+dst_top.save_stl(dst_dir_path + f"/top_case_{LR}.stl")
+dst_btm.save_stl(dst_dir_path + f"/btm_case_{LR}.stl")
 
 # %%
