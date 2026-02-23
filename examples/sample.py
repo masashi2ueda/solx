@@ -8,7 +8,7 @@ from solx.config.openscad import get_openscad_path
 # %%
 # Initialize renderer with configured OpenSCAD path
 renderer = Renderer(
-    openscad_path=get_openscad_path(),
+    openscad_exec=get_openscad_path(),
 )
 
 cube = solid.cube(size=10)

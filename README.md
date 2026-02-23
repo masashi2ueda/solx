@@ -36,6 +36,6 @@ See [assets/README.md](assets/README.md) for detailed instructions.
 For development, install in editable mode with development dependencies:
 
 ```bash
-pip install -e .[dev]
+pip install -e .\[dev\]
 ```
 

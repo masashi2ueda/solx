@@ -7,6 +7,7 @@ from solx.primitives import Cylinder, RoundedCube
 from solx.primitives.types import CenterType
 
 SMALL_VAL = 1e-5
+EPS = 1e-3
 
 
 def create_keycap_base(
@@ -23,7 +24,7 @@ def create_keycap_base(
     top_ry_deg,
     top_rz_deg,
     dimple,
-    segments)-> SolxObject:
+    segments) -> SolxObject:
     """Create a basic keycap shape using hull between two rounded cubes."""
     bottom_cube = RoundedCube(
         size=[bottom_w, bottom_d, SMALL_VAL],
@@ -48,22 +49,23 @@ def create_keycap_base(
     )
     key_cap = SolxObject(key_cap_node)
 
-    cyl_h = max(bottom_d, bottom_w) * 2
+    if dimple > 0:
+        cyl_h = max(bottom_d, bottom_w) * 2
 
-    dip_radius = top_w / 2
-    cyl = Cylinder(
-        radius=dip_radius,
-        height=cyl_h,
-        center=CenterType.CENTER)
-    cyl = cyl.rotate_x(90)
-    cyl = cyl.scale([1.0, 1.0, dimple])
-    cyl = cyl.translate((top_dx, top_dy, height))
-    cyl = cyl.rotate_x(top_rx_deg)
-    cyl = cyl.rotate_y(top_ry_deg)
-    cyl = cyl.rotate_z(top_rz_deg)
+        dip_radius = top_w / 2
+        cyl = Cylinder(
+            radius=dip_radius,
+            height=cyl_h,
+            center=CenterType.CENTER)
+        cyl = cyl.rotate_x(90)
+        cyl = cyl.scale([1.0, 1.0, dimple])
+        cyl = cyl.translate((top_dx, top_dy, height))
+        cyl = cyl.rotate_x(top_rx_deg)
+        cyl = cyl.rotate_y(top_ry_deg)
+        cyl = cyl.rotate_z(top_rz_deg)
 
-    dst = key_cap - cyl
-    return dst
+        key_cap = key_cap - cyl
+    return key_cap
 
 
 # %%
@@ -81,6 +83,13 @@ def create_keycap_top(
     top_ry_deg = 0.0,
     top_rz_deg = 0.0,
     dimple = 0.0,
+    home_bump = False,
+    home_bump_radius = 0.8,
+    home_bump_height = 0.4,
+    home_bump_length = 2.5,
+    home_bump_offset_x = 0.0,
+    home_bump_offset_y = 0.0,
+    home_bump_offset_y_ratio = -0.8,
     segments = 64,
     offset_wd = 1,
     offset_h_ratio = 0.5
@@ -101,6 +110,14 @@ def create_keycap_top(
         top_ry_deg (float): Rotation around Y axis of the top face in degrees.
         top_rz_deg (float): Rotation around Z axis of the top face in degrees.
         dimple (float): Depth of the dimple on the top face.
+        home_bump (bool): If True, add a small bump for home position.
+        home_bump_radius (float): Radius of the home position bump.
+        home_bump_height (float): Height of the home position bump.
+        home_bump_length (float): Length of the home position bump.
+        home_bump_offset_x (float): X offset of the bump on the top face.
+        home_bump_offset_y (float): Y offset of the bump on the top face.
+        home_bump_offset_y_ratio (float|None): If set, overrides Y offset using a ratio
+            of half the top depth (-1.0: front edge, 0: center, 1.0: back edge).
         segments (int): Number of segments for rounded corners.
         offset_wd (float): Wall thickness of the keycap.
         offset_h_ratio (float): Ratio of height to offset the inner hollow part.
@@ -143,7 +160,32 @@ def create_keycap_top(
         segments = segments,
     )
 
+    keycap_innter = keycap_innter.translate((0.0, 0.0, -EPS))
     key_cap = keycap_outer - keycap_innter
-    key_cap.render()
+
+    if home_bump:
+        bump_offset_y = home_bump_offset_y
+        if home_bump_offset_y_ratio is not None:
+            bump_offset_y = (top_d / 2) * home_bump_offset_y_ratio
+        bump = Cylinder(
+            radius=home_bump_radius,
+            height=home_bump_length,
+            center=CenterType.CENTER,
+            segments=segments
+        )
+        bump = bump.rotate_y(90)
+        if home_bump_radius > 0:
+            bump = bump.scale([1.0, 1.0, home_bump_height / (2 * home_bump_radius)])
+        bump = bump.translate(
+            (
+                top_dx + home_bump_offset_x,
+                top_dy + bump_offset_y,
+                height + (home_bump_height / 2)
+            )
+        )
+        bump = bump.rotate_x(top_rx_deg)
+        bump = bump.rotate_y(top_ry_deg)
+        bump = bump.rotate_z(top_rz_deg)
+        key_cap = key_cap + bump
     return key_cap
 # %%

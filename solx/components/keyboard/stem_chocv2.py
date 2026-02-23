@@ -41,17 +41,13 @@ def create_chocv2_stem(inverted=False):
     # Create the two perpendicular rectangular slots for the cross
     # Horizontal slot (along X-axis)
     horizontal_slot = Cube(
-        width=slot_length,
-        depth=slot_width,
-        height=slot_height,
+        size=(slot_length, slot_width, slot_height),
         center=CenterType.BOTTOM_CENTER
     )
 
     # Vertical slot (along Y-axis)
     vertical_slot = Cube(
-        width=slot_width,
-        depth=slot_length,
-        height=slot_height,
+        size=(slot_width, slot_length, slot_height),
         center=CenterType.BOTTOM_CENTER
     )
 

@@ -4,7 +4,7 @@ version = "0.1.0"
 dependencies = [
     "solidpython",
     "viewscad",
-    "python-dotenv
+    "python-dotenv"
 ]
 
 [project.optional-dependencies]
@@ -15,6 +15,15 @@ dev = [
     "build",
     "twine"
 ]
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["solx*"]
+exclude = ["output_stl_files*", "python=3.12*"]
 
 [tool.ruff]
 select = ["E", "F", "W", "I", "D"]

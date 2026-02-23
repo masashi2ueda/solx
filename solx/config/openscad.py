@@ -8,6 +8,7 @@ This module provides:
 # %%
 import os
 import shutil
+import sys
 from pathlib import Path
 
 
@@ -36,7 +37,16 @@ def get_openscad_path() -> str:
     if path:
         return path
 
-    # 3. Windows fallback
+    # 3. macOS fallback
+    if sys.platform == "darwin":
+        candidates = [
+            "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD",
+        ]
+        for c in candidates:
+            if Path(c).exists():
+                return c
+
+    # 4. Windows fallback
     if os.name == "nt":
         candidates = [
             r"C:\Program Files\OpenSCAD\openscad.exe",

@@ -13,10 +13,23 @@ import solid
 from solid.objects import OpenSCADObject
 from viewscad import Renderer
 
-from solx.config.openscad import get_openscad_path
+from solx.config.openscad import OpenSCADNotFoundError, get_openscad_path
 
-# Initialize renderer with configured OpenSCAD path
-_renderer = Renderer(openscad_path=get_openscad_path())
+# Initialize renderer lazily to avoid import-time failures when OpenSCAD is not installed.
+_renderer: Renderer | None = None
+
+
+def _get_renderer() -> Renderer:
+    global _renderer
+    if _renderer is None:
+        try:
+            _renderer = Renderer(openscad_exec=get_openscad_path())
+        except OpenSCADNotFoundError as exc:
+            raise OpenSCADNotFoundError(
+                "OpenSCAD executable not found. Install OpenSCAD or set OPENSCAD_PATH "
+                "before calling render() or save_stl()."
+            ) from exc
+    return _renderer
 
 Vec3 = tuple[float, float, float]
 
@@ -127,7 +140,7 @@ class SolxObject:
 
         This method uses the configured OpenSCAD executable to render the object.
         """
-        _renderer.render(self.node)
+        _get_renderer().render(self.node)
 
     def save_scad(self, path: str) -> None:
         """Save the SolxObject as an OpenSCAD (.scad) file.
@@ -143,7 +156,7 @@ class SolxObject:
         Args:
             path(str): The file path to save the .stl file.
         """
-        _renderer.render(self.node, outfile=path)
+        _get_renderer().render(self.node, outfile=path)
 
     def _param_apply(self, func_name: str, params: Vec3) -> SolxObject:
         if func_name == 'translate':
@@ -165,6 +178,12 @@ class SolxObject:
         return self.param_apply('translate', translation_vector)
     def rotate(self, rotation_angles: Vec3) -> Self:
         return self.param_apply('rotate', rotation_angles)
+    def rotate_x(self, deg: float) -> Self:
+        return self.rotate((deg, 0.0, 0.0))
+    def rotate_y(self, deg: float) -> Self:
+        return self.rotate((0.0, deg, 0.0))
+    def rotate_z(self, deg: float) -> Self:
+        return self.rotate((0.0, 0.0, deg))
     def scale(self, scale_factors: Vec3) -> Self:
         return self.param_apply('scale', scale_factors)
     def mirror(self, axis: Vec3) -> Self:
