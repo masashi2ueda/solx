@@ -6,10 +6,13 @@ specifically designed for Choc V2 switches. It combines keycap tops with stems t
 complete keycap assemblies.
 """
 # %%
-from solx import CenterType, Cube
+
+from functools import partial
+
 from solx.components.keyboard.keycap_top import create_keycap_top
-from solx.components.keyboard.stem_chocv2 import create_chocv2_stem
+from solx.components.keyboard.stem_chocv2 import ChocV2Stem
 from solx.core.base import SolxObject
+from solx.primitives.cylinder import Cylinder
 
 
 def create_keycap_with_stem(
@@ -29,17 +32,19 @@ def create_keycap_with_stem(
     top_ry_deg = 0.0,
     top_rz_deg = 0.0,
     dimple = 0.0,
-    home_bump = False,
-    home_bump_radius = 0.8,
-    home_bump_height = 0.4,
-    home_bump_length = 2.5,
-    home_bump_offset_x = 0.0,
-    home_bump_offset_y = 0.0,
-    home_bump_offset_y_ratio = -0.8,
+    # home_bump = False,
+    # home_bump_radius = 0.8,
+    # home_bump_height = 0.4,
+    # home_bump_length = 2.5,
+    # home_bump_offset_x = 0.0,
+    # home_bump_offset_y = 0.0,
+    # home_bump_offset_y_ratio = -0.8,
     segments = 64,
-    offset_wd = 1,
-    offset_h_ratio = 0.5,
-    inverted = False
+    # offset_wd = 1,
+    # offset_h_ratio = 0.5,
+    # stem_height=6.5,
+    inverted = False,
+    stem_radius = 2.765,
 ) -> SolxObject:
     """Create a keycap with a Choc V2 stem attached.
 
@@ -76,12 +81,11 @@ def create_keycap_with_stem(
     Returns:
         SolxObject: The keycap with Choc V2 stem attached.
     """
-    keycap_top = create_keycap_top(
+    create_key_top_h = partial(create_keycap_top,
         bottom_w = bottom_w,
         bottom_d = bottom_d,
         top_w = top_w,
         top_d = top_d,
-        height = height,
         bottom_radius = bottom_radius,
         top_radius = top_radius,
         top_dx = top_dx,
@@ -90,134 +94,235 @@ def create_keycap_with_stem(
         top_ry_deg = top_ry_deg,
         top_rz_deg = top_rz_deg,
         dimple = dimple,
-        home_bump = home_bump,
-        home_bump_radius = home_bump_radius,
-        home_bump_height = home_bump_height,
-        home_bump_length = home_bump_length,
-        home_bump_offset_x = home_bump_offset_x,
-        home_bump_offset_y = home_bump_offset_y,
-        home_bump_offset_y_ratio = home_bump_offset_y_ratio,
+        # home_bump = home_bump,
+        # home_bump_radius = home_bump_radius,
+        # home_bump_height = home_bump_height,
+        # home_bump_length = home_bump_length,
+        # home_bump_offset_x = home_bump_offset_x,
+        # home_bump_offset_y = home_bump_offset_y,
+        # home_bump_offset_y_ratio = home_bump_offset_y_ratio,
         segments = segments,
-        offset_wd = offset_wd,
-        offset_h_ratio = offset_h_ratio)
-    stem = create_chocv2_stem(inverted=False)
-    clip_z = top_offset_z
-    stem_clipper = Cube(size=(200, 200, 200), center=CenterType.BOTTOM_CENTER).translate(
-        (0, 0, clip_z)
-    )
-    stem = stem - stem_clipper
+        # offset_wd = offset_wd,
+        # offset_h_ratio = offset_h_ratioa
+        )
+    keycap_top = create_key_top_h(height=height)
+    # keycat_top2 = create_key_top_h(height=200, top_rx_deg=0, top_ry_deg=0, top_rz_deg=0)
+    # keycat_top3 = create_key_top_h(height=200, top_rx_deg=0, top_ry_deg=0)
+
+    stem_core = ChocV2Stem(stem_radius=stem_radius)
+    stem_cylinder = Cylinder(radius=stem_core.stem_radius,height=top_offset_z)
+
     keycap_top = keycap_top.translate((top_offset_x, top_offset_y, top_offset_z))
-    keycap = keycap_top + stem
+    # keycat_top2 = keycat_top2.translate((top_offset_x, top_offset_y, top_offset_z))
+    # keycat_top3 = keycat_top3.translate((top_offset_x, top_offset_y, top_offset_z))
+
+    # stem_cylinder -= keycat_top2
+    # stem_cylinder -= keycat_top3
+    keycap = keycap_top + stem_cylinder
+    keycap -= stem_core.cross_slot
     if inverted:
         keycap = keycap.rotate_x(180)
     return keycap
 
 
-if __name__ == "__main__":
-    keycap = create_keycap_with_stem()
-    # keycap.render()
-    from solx.config import EnvConfig
-    keycap.save_scad(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/test.scad")
-    # dst_dir_path = "/home/uedam/dev/solx/examples/output_stl"
-    # keycap.save_stl(f"{dst_dir_path}/keycap_chocv2.stl")
+
 # %%
-# キーキャップの高さ
-top_offset_z = 3.5
-# キーキャップの前への出具合
-top_offset_y = -5.0
-# ディンプルの深さ
-dimple = 0.2
-# キーキャップの傾き
-top_rx_deg = 10
-keycap = create_keycap_with_stem(
-    top_offset_z = top_offset_z,
-    top_offset_y = top_offset_y,
-    dimple=dimple,
-    top_rx_deg=top_rx_deg,
+
+LR = "R"
+# LR = "L"
+# offset_x = 200
+# offset_y = 100
+offset_x = 0
+offset_y = 0
+
+base_z = 5.0
+rz = 0
+
+# stem_radius = 2.770
+stem_radius = 2.755
+
+w = 14.5
+d = 14.5
+if rz == 45:
+    w = d = 12.0
+def mytranslate(obj, x, y):
+    return obj.translate((x , -y, 0))
+
+
+k1_d_mgn = 0.0
+k1_org = create_keycap_with_stem(
+    top_offset_z = base_z + 4.0,
+    top_offset_y = -4.0,
+    dimple=0.2,
+    top_rx_deg=8,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d-k1_d_mgn,
+    top_w = w,
+    top_d = d-k1_d_mgn,
+    stem_radius = stem_radius,
 )
-from solx.config import EnvConfig
-keycap.save_scad(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/test.scad")
+
+k2_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = -2.5,
+    dimple=0.2,
+    top_rx_deg=-3,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = d,
+    stem_radius = stem_radius,
+)
+
+k3_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = -1.5,
+    dimple=0.2,
+    top_rx_deg=-3,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = d,
+    stem_radius = stem_radius,
+)
+
+k4_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = 0.0,
+    dimple=0.2,
+    top_rx_deg=-3,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = d,
+    stem_radius = stem_radius,
+)
+
+k1 = mytranslate(k1_org, -23.0, -17.0)
+k2 = mytranslate(k2_org, -23.0, 0.0)
+k3 = mytranslate(k3_org, -23.0, 17.0)
+k4 = mytranslate(k4_org, -23.0, 34.0)
+
+if LR == "L":
+    k1 = k1.mirror((1,0,0))
+    k2 = k2.mirror((1,0,0))
+    k3 = k3.mirror((1,0,0))
+    k4 = k4.mirror((1,0,0))
+
+dst = k1 + k2 + k3 + k4
+dst.render()
 # %%
-from solx.primitives import Cube
-LR = "L"
-dst = Cube(size=(10, 10, 10))
-# key switch space
-def set_swith_diode(index: int, x: float, y: float):
-    # global top_case, cx, cy
-    global dst
-    mgn = 0.3
-    key_h = 15.0 + mgn
-    key_w = 15.0 + mgn
-    # inner_cube = Cube(size=(key_h, key_w, 100))
-    base_z = 1.0
-    # キーキャップの高さ
-    top_offset_z = base_z + 0.0
-    # キーキャップの前への出具合
-    top_offset_y = 0.0
-    # ディンプルの深さ
-    dimple = 0.2
-    # キーキャップの傾き
-    top_rx_deg = 10
-    ci = int(index/10)
-    ri = index%10
-    if ri == 1:
-        top_offset_y = -1.0
-        top_offset_z = base_z + 3.5
-        top_rx_deg = 5
-    if ri == 2:
-        top_offset_y = 0.0
-        top_offset_z = base_z + 2.0
-        top_rx_deg = 2
+from solx.config import EnvConfig
 
-    keycap = create_keycap_with_stem(
-        top_offset_z = top_offset_z,
-        top_offset_y = top_offset_y,
-        dimple=dimple,
-        top_rx_deg=top_rx_deg,
-        home_bump=True
-    )
+# k1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k1_{int(stem_radius*1000)}.stl")
+k1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k1.stl")
+k2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k2.stl")
+k3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k3.stl")
+k4.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k4.stl")
 
-    inner_cube = keycap.translate((x, -y, 0))
-    dst = dst + inner_cube
+# %%
+o_height = 4.0
+o_dimple = 0.1
+o_base_z = 4.5
+o1_org = create_keycap_with_stem(
+    top_offset_z = o_base_z,
+    top_offset_y = -3.0,
+    dimple=o_dimple,
+    top_rx_deg=5,
+    top_rz_deg=20,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = 20.0,
+    stem_radius = stem_radius,
+    height=o_height,
+)
 
-offset_x = 200
-offset_y = 100
-set_swith_diode(11, -23.0 + offset_x, -17.0 + offset_y)
-set_swith_diode(12, -23.0 + offset_x, 0.0 + offset_y)
-set_swith_diode(13, -23.0 + offset_x, 17.0 + offset_y)
-set_swith_diode(14, -23.0 + offset_x, 34.0 + offset_y)
+o2_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = -3.0,
+    dimple=0.2,
+    top_rx_deg=5,
+    top_rz_deg=0,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = 16.0,
+    stem_radius = stem_radius,
+)
 
-set_swith_diode(21, -40.0 + offset_x, -32.0 + offset_y)
-set_swith_diode(22, -40.0 + offset_x, -15.0 + offset_y)
-set_swith_diode(23, -40.0 + offset_x, 2.0 + offset_y)
-if LR == "L":
-    set_swith_diode(24, -40.0 + offset_x, 19.0 + offset_y)
+o3_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = -0.0,
+    dimple=0.2,
+    top_rx_deg=5,
+    top_rz_deg=-40,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = 14.0,
+    stem_radius = stem_radius,
+)
+off_x = 100
+o1 = mytranslate(o1_org, -109.0+off_x, 40.0)
+o2 = mytranslate(o2_org, -92.0+off_x, 34.0)
+o3 = mytranslate(o3_org, -75.0+off_x, 34.0)
 
-set_swith_diode(31, -57.0 + offset_x, -35.0 + offset_y)
-set_swith_diode(32, -57.0 + offset_x, -18.0 + offset_y)
-set_swith_diode(33, -57.0 + offset_x, -1.0 + offset_y)
-if LR == "L":
-    set_swith_diode(34, -57.0 + offset_x, 16.0 + offset_y)
-
-set_swith_diode(41, -74.0 + offset_x, -23.0 + offset_y)
-set_swith_diode(42, -74.0 + offset_x, -6.0 + offset_y)
-set_swith_diode(43, -74.0 + offset_x, 11.0 + offset_y)
-
-set_swith_diode(51, -91.0 + offset_x, -17.0 + offset_y)
-set_swith_diode(52, -91.0 + offset_x, 0.0 + offset_y)
-set_swith_diode(53, -91.0 + offset_x, 17.0 + offset_y)
-
-set_swith_diode(61, -108.0 + offset_x, 3.0 + offset_y)
-set_swith_diode(62, -108.0 + offset_x, 20.0 + offset_y)
-
-set_swith_diode(71, -109.0 + offset_x, 40.0 + offset_y)
-set_swith_diode(81, -92.0 + offset_x, 34.0 + offset_y)
-if LR == "L":
-    set_swith_diode(91, -75.0 + offset_x, 34.0 + offset_y)
 
 if LR == "L":
-    dst = dst.mirror((1,0,0))
+    o1 = o1.mirror((1,0,0))
+    o2 = o2.mirror((1,0,0))
+    o3 = o3.mirror((1,0,0))
 
 
-dst.save_scad(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/test.scad")
+dst = o1 + o2 + o3
+dst.render()
+# set_swith_diode(71, -109.0 + offset_x, 40.0 + offset_y)
+# set_swith_diode(81, -92.0 + offset_x, 34.0 + offset_y)
+# if LR == "L":
+#     set_swith_diode(91, -75.0 + offset_x, 34.0 + offset_y)
+
+# %%
+from solx.config import EnvConfig
+
+o1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_o1.stl")
+o2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_o2.stl")
+o3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_o3.stl")
+# %%
+# set_swith_diode(21, -40.0 + offset_x, -32.0 + offset_y)
+# set_swith_diode(22, -40.0 + offset_x, -15.0 + offset_y)
+# set_swith_diode(23, -40.0 + offset_x, 2.0 + offset_y)
+# if LR == "L":
+#     set_swith_diode(24, -40.0 + offset_x, 19.0 + offset_y)
+
+# set_swith_diode(31, -57.0 + offset_x, -35.0 + offset_y)
+# set_swith_diode(32, -57.0 + offset_x, -18.0 + offset_y)
+# set_swith_diode(33, -57.0 + offset_x, -1.0 + offset_y)
+# if LR == "L":
+#     set_swith_diode(34, -57.0 + offset_x, 16.0 + offset_y)
+
+# set_swith_diode(41, -74.0 + offset_x, -23.0 + offset_y)
+# set_swith_diode(42, -74.0 + offset_x, -6.0 + offset_y)
+# set_swith_diode(43, -74.0 + offset_x, 11.0 + offset_y)
+
+# set_swith_diode(51, -91.0 + offset_x, -17.0 + offset_y)
+# set_swith_diode(52, -91.0 + offset_x, 0.0 + offset_y)
+# set_swith_diode(53, -91.0 + offset_x, 17.0 + offset_y)
+
+# set_swith_diode(61, -108.0 + offset_x, 3.0 + offset_y)
+# set_swith_diode(62, -108.0 + offset_x, 20.0 + offset_y)
+
+# set_swith_diode(71, -109.0 + offset_x, 40.0 + offset_y)
+# set_swith_diode(81, -92.0 + offset_x, 34.0 + offset_y)
+# if LR == "L":
+#     set_swith_diode(91, -75.0 + offset_x, 34.0 + offset_y)
+# if LR == "L":
+#     dst = dst.mirror((1,0,0))
+
+dst.render()
+# dst.save_scad(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/test.scad")
 # %%

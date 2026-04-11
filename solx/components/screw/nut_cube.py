@@ -5,6 +5,54 @@ from solx.primitives import CenterType, Cube, Cylinder
 nut_cube_h = 11.0
 nut_cube_wd = 8.125
 
+cylinder_hole_r = 3.6 / 2
+nut_h = 2.4
+nut_top_wall = 1.5
+cylinder_hole_h = nut_h + nut_top_wall
+
+nut_r = 3.0 + 0.2
+thread_cylinder = Cylinder(radius=cylinder_hole_r, height=cylinder_hole_h, segments=30, center=CenterType.BOTTOM_CENTER)
+thread_cylinder = thread_cylinder.translate((0, 0, nut_cube_h - cylinder_hole_h))
+cube = Cube((nut_cube_wd, nut_cube_wd, nut_cube_h), center=CenterType.BOTTOM_CENTER)
+cube -= thread_cylinder
+
+nut_cylinder = Cylinder(radius=nut_r, height=nut_h, segments=6,center=CenterType.BOTTOM_CENTER)
+nut_cylinder = nut_cylinder.translate((0, 0, nut_cube_h - cylinder_hole_h))
+cube -= nut_cylinder
+
+nd = nut_cube_wd / 2
+nut_cube = Cube(size=(nut_r*2, nd, nut_h), center=CenterType.BOTTOM_CENTER)
+nut_cube = nut_cube.translate((0, -nd / 2, nut_cube_h - cylinder_hole_h))
+cube -= nut_cube
+
+cube.render()
+
+dst_path = config.EnvConfig.OUTPUT_STL_DIR_PATH + "/mat_nut_cube.stl"
+cube.save_stl(dst_path)
+
+
+# %%
+
+r = nut_r + nut_r_clr
+cylinder = Cylinder(radius=r, height=nut_h, segments=6,center=CenterType.BOTTOM_CENTER)
+cylinder.render()
+
+tz = nut_cube_h - nut_h
+cylinder = cylinder.translate((0, 0, tz))
+
+cube -= cylinder
+cube.render()
+
+dst_path = config.EnvConfig.OUTPUT_STL_DIR_PATH + "/mat_nut_cube.stl"
+cube.save_stl(dst_path)
+
+# %%
+from solx import config
+from solx.primitives import CenterType, Cube, Cylinder
+
+nut_cube_h = 11.0
+nut_cube_wd = 8.125
+
 nut_r = 3.0
 nut_r_clr = 0.2
 nut_h = 3.0
@@ -43,8 +91,7 @@ def create_trapezoid_thread(
     tooth_height: float,
     tooth_width: float,
     flat_ratio: float = 0.3):
-    """
-    台形のネジ山（ISO規格に近い形状）
+    """台形のネジ山（ISO規格に近い形状）
     
     :param tooth_width: 歯の幅
     :param tooth_height: 歯の高さ
@@ -107,7 +154,7 @@ class Screw(SolxObject):
         handle = handle.translate((0, 0, screw_height))
         dst = thread + cylinder + handle
 
-        
+
         super().__init__(dst.node)
 
 
@@ -161,7 +208,7 @@ class Nut(SolxObject):
         dst.thread = self.thread.param_apply(func_name, params)
         dst.nat_hole_cube = self.nat_hole_cube.param_apply(func_name, params)
         return dst
-    
+
     def add_to(self, base: T) -> T:
         base += self
         base -= self.thread
