@@ -6,7 +6,6 @@ specifically designed for Choc V2 switches. It combines keycap tops with stems t
 complete keycap assemblies.
 """
 # %%
-import numpy as np
 
 from solx.components.keyboard.keycap_top import create_keycap_top
 from solx.components.keyboard.stem_chocv2 import ChocV2Stem
@@ -80,12 +79,16 @@ def create_keycap(
     return dst
 
 dy1 = 5.0
-
 d_keytop_d = - dy1 / 3
-hd1 = 5.0
-hd2 = 2.0
-rdx1 = np.atan2(hd1-hd2, TOP_D) * 180 / np.pi
-rdx2 = np.atan2(hd2, TOP_D) * 180 / np.pi + 5
+
+hd1 = 6.0
+hd2 = 4.0
+hd3 = 3.0
+hd4 = 2.0
+rdx1 = 20
+rdx2 = -10
+rdx3 = -5
+rdx4 = -5
 k1_org = create_keycap(
     d_top_offset_y=dy1,
     key_cap_dh=hd1,
@@ -97,10 +100,14 @@ k2_org = create_keycap(
     top_rx_deg=rdx2,)
 k3_org = create_keycap(
     d_top_offset_y=-1.5 * d_keytop_d,
-    d_keytop_size_d=d_keytop_d)
+    d_keytop_size_d=d_keytop_d,
+    key_cap_dh=hd3,
+    top_rx_deg=rdx3,)
 k4_org = create_keycap(
     d_top_offset_y=-0.5 * d_keytop_d,
-    d_keytop_size_d=d_keytop_d)
+    d_keytop_size_d=d_keytop_d,
+    key_cap_dh=hd4,
+    top_rx_deg=rdx4,)
 
 def mytranslate(obj, x, y):
     return obj.translate((x , -y, 0))
@@ -127,31 +134,133 @@ k1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_k1.stl")
 k2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_k2.stl")
 k3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_k3.stl")
 k4.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_k4.stl")
+# %%
+dy_point = 2.0
+k1_org = create_keycap(
+    d_top_offset_y=dy1-dy_point,
+    key_cap_dh=hd1,
+    top_rx_deg=rdx1,)
+k2_org = create_keycap(
+    d_top_offset_y=-2.5 * d_keytop_d - dy_point,
+    d_keytop_size_d=d_keytop_d,
+    key_cap_dh=hd2,
+    top_rx_deg=rdx2,)
+k3_org = create_keycap(
+    d_top_offset_y=-1.5 * d_keytop_d - dy_point,
+    d_keytop_size_d=d_keytop_d,
+    key_cap_dh=hd3,
+    top_rx_deg=rdx3,)
+k4_org = create_keycap(
+    d_top_offset_y=-0.5 * d_keytop_d - dy_point,
+    d_keytop_size_d=d_keytop_d,
+    key_cap_dh=hd4,
+    top_rx_deg=rdx4,)
 
+def mytranslate(obj, x, y):
+    return obj.translate((x , -y, 0))
+k1 = mytranslate(k1_org, -23.0, -K_MGN_Y)
+k2 = mytranslate(k2_org, -23.0, 0.0)
+k3 = mytranslate(k3_org, -23.0, K_MGN_Y)
+k4 = mytranslate(k4_org, -23.0, 2 * K_MGN_Y)
+
+if LR == "L":
+    k1 = k1.mirror((1,0,0))
+    k2 = k2.mirror((1,0,0))
+    k3 = k3.mirror((1,0,0))
+    k4 = k4.mirror((1,0,0))
+
+dst = k1 + k2 + k3 + k4
+if True:
+    dst += dst.translate((17, 0, 0.0))
+dst.render()
+# %%
+from solx.config import EnvConfig
+
+# k1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k1_{int(stem_radius*1000)}.stl")
+k1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{dy_point}_k1.stl")
+k2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{dy_point}_k2.stl")
+k3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{dy_point}_k3.stl")
+k4.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{dy_point}_k4.stl")
 
 
 # %%
-LR = "R"
-# LR = "L"
-# offset_x = 200
-# offset_y = 100
-offset_x = 0
-offset_y = 0
+top_d_2 = 2
+k1_org = create_keycap_with_stem(
+    top_offset_z = base_z + 4.0,
+    top_offset_y = -4.0,
+    dimple=0.2,
+    top_rx_deg=8,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d-k1_d_mgn,
+    top_w = w,
+    top_d = d-k1_d_mgn,
+    stem_radius = stem_radius,
+)
 
-base_z = 5.0
-rz = 0
+k2_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = -2.5,
+    dimple=0.2,
+    top_rx_deg=-3,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = d,
+    stem_radius = stem_radius,
+)
 
-# stem_radius = 2.770
-stem_radius = 2.755
+k3_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = -1.5,
+    dimple=0.2,
+    top_rx_deg=-3,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = d,
+    stem_radius = stem_radius,
+)
 
-w = 14.5
-d = 14.5
-if rz == 45:
-    w = d = 12.0
-def mytranslate(obj, x, y):
-    return obj.translate((x , -y, 0))
+k4_org = create_keycap_with_stem(
+    top_offset_z = base_z,
+    top_offset_y = 0.0,
+    dimple=0.2,
+    top_rx_deg=-3,
+    top_rz_deg=rz,
+    bottom_w = w,
+    bottom_d = d,
+    top_w = w,
+    top_d = d,
+    stem_radius = stem_radius,
+)
 
+k1 = mytranslate(k1_org, -23.0, -17.0)
+k2 = mytranslate(k2_org, -23.0, 0.0)
+k3 = mytranslate(k3_org, -23.0, 17.0)
+k4 = mytranslate(k4_org, -23.0, 34.0)
 
+if LR == "L":
+    k1 = k1.mirror((1,0,0))
+    k2 = k2.mirror((1,0,0))
+    k3 = k3.mirror((1,0,0))
+    k4 = k4.mirror((1,0,0))
+
+dst = k1 + k2 + k3 + k4
+if True:
+    dst += dst.translate((17, 0, 0.0))
+dst.render()
+# %%
+from solx.config import EnvConfig
+
+# k1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k1_{int(stem_radius*1000)}.stl")
+k1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k1.stl")
+k2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k2.stl")
+k3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k3.stl")
+k4.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k4.stl")
+# %%
 k1_d_mgn = 0.0
 k1_org = create_keycap_with_stem(
     top_offset_z = base_z + 4.0,
@@ -229,6 +338,7 @@ k2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k2.stl")
 k3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k3.stl")
 k4.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{rz}_k4.stl")
 
+# %%
 # %%
 o_height = 4.0
 o_dimple = 0.1

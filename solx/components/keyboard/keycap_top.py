@@ -47,10 +47,11 @@ def create_keycap_top(
         segments=segments
     )
 
-    top_cube = top_cube.translate((top_dx, top_dy, height))
     top_cube = top_cube.rotate_x(top_rx_deg)
     top_cube = top_cube.rotate_y(top_ry_deg)
     top_cube = top_cube.rotate_z(top_rz_deg)
+    top_cube = top_cube.translate((top_dx, top_dy, height))
+
     key_cap_node = solid.hull()(
         bottom_cube.node, top_cube.node
     )
