@@ -42,16 +42,19 @@ K_BLANK_Y = K_MGN_Y - BASE_KEY_SIZE
 
 def create_keycap(
     d_keytop_size_d=0.0,
+    d_keytop_size_w=0.0,
     d_top_offset_y=0.0,
     key_cap_dh=0.0,
     top_rx_deg=0.0,
+    top_rz_deg=0.0,
+    keytop_trans_x=0.0,
 ):
     d_keytop_size_d = d_keytop_size_d
     d_top_offset_y = - d_top_offset_y
     key_cap_top = create_keycap_top(
-        bottom_w=BOTTOM_W,
+        bottom_w=BOTTOM_W + d_keytop_size_w,
         bottom_d=BOTTOM_D + d_keytop_size_d,
-        top_w=TOP_W,
+        top_w=TOP_W + d_keytop_size_w,
         top_d=TOP_D + d_keytop_size_d,
         height=5.0 + key_cap_dh,
         bottom_radius=3,
@@ -60,7 +63,7 @@ def create_keycap(
         top_dy=0.0,
         top_rx_deg=top_rx_deg,
         top_ry_deg=0.0,
-        top_rz_deg=0.0,
+        top_rz_deg=top_rz_deg,
         is_dimple=True,
         dimple_radius=40.0,
         dimple_size=3.0,
@@ -68,6 +71,7 @@ def create_keycap(
         is_sohw_dimple=False,
         segments=64,
     )
+    key_cap_top = key_cap_top.translate((keytop_trans_x, 0.0, 0.0))
     dst = create_keycap_with_stem(
         keycap_top=key_cap_top,
         top_offset_x=0.0,
@@ -135,6 +139,7 @@ k2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_k2.stl")
 k3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_k3.stl")
 k4.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_k4.stl")
 # %%
+# 人差し指のために少し下に移動する
 dy_point = 2.0
 k1_org = create_keycap(
     d_top_offset_y=dy1-dy_point,
@@ -182,7 +187,55 @@ k2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{dy_point}_k2.stl")
 k3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{dy_point}_k3.stl")
 k4.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_{dy_point}_k4.stl")
 
+# %%
 
+o1_org = create_keycap(
+    d_top_offset_y=2.0,
+    top_rx_deg=3,
+    top_rz_deg=20,
+    d_keytop_size_w=-1.5,
+    key_cap_dh=3.0,
+)
+o2_org = create_keycap(
+    d_top_offset_y=2.0,
+    top_rx_deg=3,
+    top_rz_deg=6,
+    d_keytop_size_w=-4.0,
+    keytop_trans_x=-3.0,
+    key_cap_dh=3.0,
+)
+o3_org = create_keycap()
+
+
+off_x = 100
+o1 = mytranslate(o1_org, -109.0+off_x, 40.0)
+o2 = mytranslate(o2_org, -92.0+off_x, 34.0)
+o3 = mytranslate(o3_org, -75.0+off_x, 34.0)
+
+
+if LR == "L":
+    o1 = o1.mirror((1,0,0))
+    o2 = o2.mirror((1,0,0))
+    o3 = o3.mirror((1,0,0))
+
+
+dst = o1 + o2
+if LR == "L":
+    dst += o3
+dst.render()
+# set_swith_diode(71, -109.0 + offset_x, 40.0 + offset_y)
+# set_swith_diode(81, -92.0 + offset_x, 34.0 + offset_y)
+# if LR == "L":
+#     set_swith_diode(91, -75.0 + offset_x, 34.0 + offset_y)
+
+# %%
+from solx.config import EnvConfig
+
+o1.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_o1.stl")
+o2.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_o2.stl")
+o3.save_stl(f"{EnvConfig.OUTPUT_STL_DIR_PATH}/{LR}_o3.stl")
+# %%
+##########################################以下old
 # %%
 top_d_2 = 2
 k1_org = create_keycap_with_stem(
