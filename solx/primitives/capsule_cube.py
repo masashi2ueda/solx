@@ -23,6 +23,7 @@ class CapsuleCube(Cube):
     pts: list[Point3D]
     node: OpenSCADObject
     r: float
+
     def __init__(
         self,
         size: Vec3 = (1, 1, 1),

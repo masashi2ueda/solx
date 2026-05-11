@@ -1,9 +1,9 @@
-
 """Polygon extrusion primitive for 3D modeling.
 
 This module provides the PolygonExtrude class for creating 3D objects by extruding
 2D polygon shapes along the Z-axis using the SolidPython library.
 """
+
 # %%
 from __future__ import annotations
 
@@ -40,9 +40,7 @@ class PolygonExtrude(SolxObject):
         Returns:
             SolxObject: A polygon extrude object positioned according to the specified parameters.
         """
-        node_extrude = solid.linear_extrude(height=height)(
-            solid.polygon(points=points)
-        )
+        node_extrude = solid.linear_extrude(height=height)(solid.polygon(points=points))
         super().__init__(node_extrude)
         self.h = height
         self.top_pts = [Point3D(x, y, height) for x, y in points]
@@ -55,10 +53,12 @@ class PolygonExtrude(SolxObject):
         dst.bottom_pts = [param_apply(func_name, params, pt) for pt in self.bottom_pts]
         return dst
 
+
 if __name__ == "__main__":
     from solx.primitives.cube import Cube
     from solx.primitives.types import CenterType
-    taobj = PolygonExtrude(points=[(0,0), (10,0), (10,20), (5,20), (3, 8)], height=10)
+
+    taobj = PolygonExtrude(points=[(0, 0), (10, 0), (10, 20), (5, 20), (3, 8)], height=10)
     taobj = taobj.translate((10, 20, 30))
     taobj = taobj.rotate((10, 20, 30))
     taobj = taobj.scale((1.5, 2.0, 2.5))

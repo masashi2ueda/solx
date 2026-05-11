@@ -56,9 +56,7 @@ def get_openscad_path() -> str:
             if Path(c).exists():
                 return c
 
-    raise OpenSCADNotFoundError(
-        "OpenSCAD not found.\nInstall OpenSCAD or set OPENSCAD_PATH."
-    )
+    raise OpenSCADNotFoundError("OpenSCAD not found.\nInstall OpenSCAD or set OPENSCAD_PATH.")
 
 
 # %%

@@ -3,6 +3,7 @@
 This module provides the fundamental SolxObject wrapper class that unifies
 SolidPython/OpenSCAD nodes with additional utility methods and transforms.
 """
+
 from __future__ import annotations
 
 import copy
@@ -31,17 +32,19 @@ def _get_renderer() -> Renderer:
             ) from exc
     return _renderer
 
+
 Vec3 = tuple[float, float, float]
 
-def param_apply(func_name: str, params: Vec3, target: OpenSCADObject|Point3D) -> OpenSCADObject|Point3D:
+
+def param_apply(func_name: str, params: Vec3, target: OpenSCADObject | Point3D) -> OpenSCADObject | Point3D:
     if isinstance(target, OpenSCADObject):
-        if func_name == 'translate':
+        if func_name == "translate":
             return solid.translate(params)(target)
-        elif func_name == 'rotate':
+        elif func_name == "rotate":
             return solid.rotate(params)(target)
-        elif func_name == 'scale':
+        elif func_name == "scale":
             return solid.scale(params)(target)
-        elif func_name == 'mirror':
+        elif func_name == "mirror":
             return solid.mirror(params)(target)
         else:
             raise ValueError(f"Unknown function name: {func_name}")
@@ -56,7 +59,7 @@ class Point3D:
         self.x = x
         self.y = y
         self.z = z
-    
+
     def to_tuple(self) -> Vec3:
         return (self.x, self.y, self.z)
 
@@ -67,15 +70,9 @@ class Point3D:
     def rotate(self, rotation_angles: Vec3) -> Point3D:
         rx, ry, rz = np.radians(rotation_angles)
         # Rotation matrices around each axis
-        Rx = np.array([[1, 0, 0],
-                       [0, np.cos(rx), -np.sin(rx)],
-                       [0, np.sin(rx), np.cos(rx)]])
-        Ry = np.array([[np.cos(ry), 0, np.sin(ry)],
-                       [0, 1, 0],
-                       [-np.sin(ry), 0, np.cos(ry)]])
-        Rz = np.array([[np.cos(rz), -np.sin(rz), 0],
-                       [np.sin(rz), np.cos(rz), 0],
-                       [0, 0, 1]])
+        Rx = np.array([[1, 0, 0], [0, np.cos(rx), -np.sin(rx)], [0, np.sin(rx), np.cos(rx)]])
+        Ry = np.array([[np.cos(ry), 0, np.sin(ry)], [0, 1, 0], [-np.sin(ry), 0, np.cos(ry)]])
+        Rz = np.array([[np.cos(rz), -np.sin(rz), 0], [np.sin(rz), np.cos(rz), 0], [0, 0, 1]])
         # Combined rotation matrix
         R = Rz @ Ry @ Rx
         # Original point as vector
@@ -83,35 +80,34 @@ class Point3D:
         # Rotated point
         p_rotated = R @ p
         return Point3D(p_rotated[0], p_rotated[1], p_rotated[2])
-    
+
     def scale(self, scale_factors: Vec3) -> Point3D:
         sx, sy, sz = scale_factors
         return Point3D(self.x * sx, self.y * sy, self.z * sz)
-    
+
     def mirror(self, axis: Vec3) -> Point3D:
         mx, my, mz = axis
         return Point3D(
             -self.x if mx else self.x,
             -self.y if my else self.y,
-            -self.z if mz else self.z
+            -self.z if mz else self.z,
         )
-    
+
     def _param_apply(self, func_name: str, params: Vec3) -> Point3D:
-        if func_name == 'translate':
+        if func_name == "translate":
             return self.translate(params)
-        elif func_name == 'rotate':
+        elif func_name == "rotate":
             return self.rotate(params)
-        elif func_name == 'scale':
+        elif func_name == "scale":
             return self.scale(params)
-        elif func_name == 'mirror':
+        elif func_name == "mirror":
             return self.mirror(params)
         else:
             raise ValueError(f"Unknown function name: {func_name}")
 
     def distance_to(self, other: Point3D) -> float:
-        return np.sqrt((self.x - other.x) ** 2 +
-                       (self.y - other.y) ** 2 +
-                       (self.z - other.z) ** 2)
+        return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2)
+
 
 class SolxObject:
     """Wrapper class for SolidPython/OpenSCAD nodes.
@@ -122,8 +118,8 @@ class SolxObject:
 
     def __init__(
         self,
-        openscad_node: OpenSCADObject=None,
-        ) -> None:
+        openscad_node: OpenSCADObject = None,
+    ) -> None:
         """Initialize SolxObject with a SolidPython node.
 
         Args:
@@ -159,13 +155,13 @@ class SolxObject:
         _get_renderer().render(self.node, outfile=path)
 
     def _param_apply(self, func_name: str, params: Vec3) -> SolxObject:
-        if func_name == 'translate':
+        if func_name == "translate":
             return SolxObject(openscad_node=solid.translate(params)(self.node))
-        elif func_name == 'rotate':
+        elif func_name == "rotate":
             return SolxObject(openscad_node=solid.rotate(params)(self.node))
-        elif func_name == 'scale':
+        elif func_name == "scale":
             return SolxObject(openscad_node=solid.scale(params)(self.node))
-        elif func_name == 'mirror':
+        elif func_name == "mirror":
             return SolxObject(openscad_node=solid.mirror(params)(self.node))
         else:
             raise ValueError(f"Unknown function name: {func_name}")
@@ -175,31 +171,37 @@ class SolxObject:
         return SolxObject(openscad_node=node)
 
     def translate(self, translation_vector: Vec3) -> Self:
-        return self.param_apply('translate', translation_vector)
+        return self.param_apply("translate", translation_vector)
+
     def rotate(self, rotation_angles: Vec3) -> Self:
-        return self.param_apply('rotate', rotation_angles)
+        return self.param_apply("rotate", rotation_angles)
+
     def rotate_x(self, deg: float) -> Self:
         return self.rotate((deg, 0.0, 0.0))
+
     def rotate_y(self, deg: float) -> Self:
         return self.rotate((0.0, deg, 0.0))
+
     def rotate_z(self, deg: float) -> Self:
         return self.rotate((0.0, 0.0, deg))
+
     def scale(self, scale_factors: Vec3) -> Self:
-        return self.param_apply('scale', scale_factors)
+        return self.param_apply("scale", scale_factors)
+
     def mirror(self, axis: Vec3) -> Self:
-        return self.param_apply('mirror', axis)
+        return self.param_apply("mirror", axis)
 
     def copy(self) -> Self:
         return copy.deepcopy(self)
-    
+
     def other_param_apply(self, func_name: str, other: SolxObject) -> Self:
         dst = self.copy()
         src_node = self.node
         other_node = other.node
         dst_node = None
-        if func_name == 'union':
+        if func_name == "union":
             dst_node = solid.union()(src_node, other_node)
-        elif func_name == 'difference':
+        elif func_name == "difference":
             dst_node = solid.difference()(src_node, other_node)
         else:
             raise ValueError(f"Unknown function name: {func_name}")
@@ -207,7 +209,7 @@ class SolxObject:
         return dst
 
     def __add__(self, other: SolxObject) -> Self:
-        return self.other_param_apply('union', other)
+        return self.other_param_apply("union", other)
 
     def __sub__(self, other: SolxObject) -> Self:
-        return self.other_param_apply('difference', other)
+        return self.other_param_apply("difference", other)

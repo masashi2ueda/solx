@@ -2,6 +2,7 @@
 
 This module provides a cylinder primitive with configurable positioning origins.
 """
+
 # %%
 from __future__ import annotations
 
@@ -21,15 +22,11 @@ class Cylinder(SolxObject):
         center: CenterType = CenterType.BOTTOM_CENTER,
         segments: int = 32,
     ):
-        node_cylinder = solid.cylinder(
-            r=radius,
-            h=height,
-            center=True,
-            segments=segments)
+        node_cylinder = solid.cylinder(r=radius, h=height, center=True, segments=segments)
         cyl = SolxObject(node_cylinder)
         pts = [
             Point3D(0, 0, -height / 2),  # Bottom center
-            Point3D(0, 0, height / 2),   # Top center
+            Point3D(0, 0, height / 2),  # Top center
         ]
 
         if center == CenterType.BOTTOM_CENTER:
@@ -56,10 +53,11 @@ class Cylinder(SolxObject):
     @property
     def bottom_center(self) -> Point3D:
         return self.pts[0]
+
     @property
     def top_center(self) -> Point3D:
         return self.pts[1]
-    
+
     def param_apply(self, func_name: str, params: Vec3) -> Cylinder:
         dst = copy.deepcopy(self)
         dst.node = param_apply(func_name, params, self.node)
@@ -69,6 +67,7 @@ class Cylinder(SolxObject):
 
 if __name__ == "__main__":
     from solx.primitives.cube import Cube
+
     taobj = Cylinder(radius=10, height=20, center=CenterType.BOTTOM_LEFT)
     taobj = taobj.translate((10, 20, 30))
     taobj = taobj.rotate((10, 20, 30))

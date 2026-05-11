@@ -3,6 +3,7 @@
 This module provides type definitions that are commonly used across
 different primitive objects in the solx library.
 """
+
 from enum import Enum, auto
 
 
@@ -17,8 +18,10 @@ class CenterType(Enum):
         CENTER: Origin at the geometric center of the object.
         BOTTOM_LEFT: Origin at the bottom left corner of the object.
     """
+
     BOTTOM_CENTER = auto()
     CENTER = auto()
     BOTTOM_LEFT = auto()
+
 
 DefautltCenterType = CenterType.BOTTOM_CENTER

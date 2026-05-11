@@ -8,32 +8,21 @@ from solx.primitives.types import CenterType, DefautltCenterType
 
 
 class RoundedCube(Cube):
-
-    def __init__(self,
+    def __init__(
+        self,
         size: Vec3 = (5, 5, 5),
         radius: float = 1.0,
         segments: int = 32,
-        center: CenterType = DefautltCenterType
+        center: CenterType = DefautltCenterType,
     ):
         r2 = radius * 2
-        w, d, h = size 
-        base_cube1 = Cube(
-            size=(w - r2, d, h),
-            center=CenterType.BOTTOM_CENTER
-        )
-        base_cube2 = Cube(
-            size=(w, d - r2, h),
-            center=CenterType.BOTTOM_CENTER
-        )
+        w, d, h = size
+        base_cube1 = Cube(size=(w - r2, d, h), center=CenterType.BOTTOM_CENTER)
+        base_cube2 = Cube(size=(w, d - r2, h), center=CenterType.BOTTOM_CENTER)
         base_cube = base_cube1 + base_cube2
         outer_cube = Cube(size=size, center=CenterType.BOTTOM_CENTER)
 
-        corner_cylinder = Cylinder(
-            radius=radius,
-            segments=segments,
-            height=h,
-            center=CenterType.BOTTOM_CENTER
-        )
+        corner_cylinder = Cylinder(radius=radius, segments=segments, height=h, center=CenterType.BOTTOM_CENTER)
         dw = w / 2 - radius
         dh = d / 2 - radius
         base_cube += corner_cylinder.translate((dw, dh, 0))
@@ -57,7 +46,7 @@ class RoundedCube(Cube):
 
 
 if __name__ == "__main__":
-    taobj = RoundedCube(size=(30, 20, 10),radius=3, center=CenterType.BOTTOM_CENTER)
+    taobj = RoundedCube(size=(30, 20, 10), radius=3, center=CenterType.BOTTOM_CENTER)
     taobj = taobj.translate((10, 20, 30))
     taobj = taobj.rotate((10, 0, 0))
     taobj = taobj.scale((1.5, 2.0, 2.5))

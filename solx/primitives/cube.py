@@ -2,6 +2,7 @@
 
 This module provides a cube primitive with configurable positioning origins.
 """
+
 # %%
 from __future__ import annotations
 
@@ -46,37 +47,41 @@ class Cube(SolxObject):
             center_translation = (w / 2, d / 2, h / 2)
         base_cube = base_cube.translate(center_translation)
         pts = [pt.translate(center_translation) for pt in pts]
-        
+
         super().__init__(openscad_node=base_cube.node)
         self.pts = pts
-    
+
     @staticmethod
     def create_pts(size: Vec3) -> list[Point3D]:
         w, d, h = size
         pts = [
             Point3D(-w / 2, -d / 2, -h / 2),  # p0
-            Point3D( w / 2, -d / 2, -h / 2),  # p1
-            Point3D( w / 2,  d / 2, -h / 2),  # p2
-            Point3D(-w / 2,  d / 2, -h / 2),  # p3
-            Point3D(-w / 2, -d / 2,  h / 2),  # p4
-            Point3D( w / 2, -d / 2,  h / 2),  # p5
-            Point3D( w / 2,  d / 2,  h / 2),  # p6
-            Point3D(-w / 2,  d / 2,  h / 2),  # p7
+            Point3D(w / 2, -d / 2, -h / 2),  # p1
+            Point3D(w / 2, d / 2, -h / 2),  # p2
+            Point3D(-w / 2, d / 2, -h / 2),  # p3
+            Point3D(-w / 2, -d / 2, h / 2),  # p4
+            Point3D(w / 2, -d / 2, h / 2),  # p5
+            Point3D(w / 2, d / 2, h / 2),  # p6
+            Point3D(-w / 2, d / 2, h / 2),  # p7
         ]
         return pts
 
     @property
     def w(self) -> float:
         return self.pts[1].distance_to(self.pts[0])
+
     @property
     def d(self) -> float:
         return self.pts[3].distance_to(self.pts[0])
+
     @property
     def h(self) -> float:
         return self.pts[4].distance_to(self.pts[0])
+
     @property
     def size(self) -> Vec3:
         return (self.w, self.d, self.h)
+
     @property
     def center(self) -> Point3D:
         cx = (self.pts[0].x + self.pts[1].x) / 2
@@ -99,7 +104,6 @@ class Cube(SolxObject):
         dst.node = param_apply(func_name, params, self.node)
         dst.pts = [param_apply(func_name, params, pt) for pt in self.pts]
         return dst
-
 
     def param_apply(self, func_name: str, params: Vec3) -> Cube:
         return self.cube_param_apply(func_name, params)

@@ -1,7 +1,0 @@
-# Core dependencies
-solid
-setuptools<81
-
-# Development dependencies (optional)
-pytest
-pytest-cov

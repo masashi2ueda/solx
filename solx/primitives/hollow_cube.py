@@ -12,22 +12,19 @@ T = TypeVar("T", bound=SolxObject)
 
 
 class HollowCube(Cube):
-    def  __init__(
+    def __init__(
         self,
         size: Vec3 = (5, 5, 5),
         wall_thickness: float = 1.0,
         center: CenterType = DefautltCenterType,
-        d_px: float| None = None,
-        d_mx: float| None = None,
-        d_py: float| None = None,
-        d_my: float| None = None,
-        d_pz: float| None = None,
-        d_mz: float| None = None,
+        d_px: float | None = None,
+        d_mx: float | None = None,
+        d_py: float | None = None,
+        d_my: float | None = None,
+        d_pz: float | None = None,
+        d_mz: float | None = None,
     ):
-        cube = Cube(
-            size=size,
-            center=CenterType.BOTTOM_LEFT
-        )
+        cube = Cube(size=size, center=CenterType.BOTTOM_LEFT)
 
         def trans_d_func(d_val, wall_thickness):
             return d_val if d_val is not None else wall_thickness if wall_thickness is not None else 1.0
@@ -41,10 +38,9 @@ class HollowCube(Cube):
         subt_width = cube.w - d_px - d_mx
         subt_depth = cube.d - d_py - d_my
         subt_height = cube.h - d_pz - d_mz
-        subt_cube = Cube(
-            size=(subt_width, subt_depth, subt_height),
-            center=CenterType.BOTTOM_LEFT
-        ).translate((d_mx, d_my, d_mz))
+        subt_cube = Cube(size=(subt_width, subt_depth, subt_height), center=CenterType.BOTTOM_LEFT).translate(
+            (d_mx, d_my, d_mz)
+        )
         hollow_cube = cube - subt_cube
 
         trans_vec = (0, 0, 0)
@@ -52,7 +48,7 @@ class HollowCube(Cube):
             trans_vec = (-cube.w / 2, -cube.d / 2, 0)
         elif center == CenterType.CENTER:
             trans_vec = (-cube.w / 2, -cube.d / 2, -cube.h / 2)
-        
+
         hollow_cube = hollow_cube.translate(trans_vec)
         subt_cube = subt_cube.translate(trans_vec)
 
@@ -70,7 +66,7 @@ class HollowCube(Cube):
         dst = dst.cube_param_apply(func_name, params)
         dst.subt_cube = self.subt_cube.param_apply(func_name, params)
         return dst
-    
+
     def add_to(self, base: T) -> T:
         base += self
         base -= self.subt_cube
@@ -78,7 +74,7 @@ class HollowCube(Cube):
 
 
 if __name__ == "__main__":
-    taobj = HollowCube(size=(30, 5, 30),wall_thickness=1,d_px=0, center=CenterType.BOTTOM_CENTER)
+    taobj = HollowCube(size=(30, 5, 30), wall_thickness=1, d_px=0, center=CenterType.BOTTOM_CENTER)
     taobj = taobj.translate((10, 20, 30))
     taobj = taobj.rotate((10, 0, 0))
     taobj = taobj.scale((1.5, 2.0, 2.5))
@@ -90,7 +86,7 @@ if __name__ == "__main__":
     for i, pt in enumerate(taobj.pts):
         pt_cube = Cube(size=(1, 1, 5), center=CenterType.CENTER).translate(pt.to_tuple())
         dst += pt_cube
-    subt_cube = taobj.subt_cube.translate((0,5,0))
+    subt_cube = taobj.subt_cube.translate((0, 5, 0))
     dst += subt_cube
     for i, pt in enumerate(subt_cube.pts):
         pt_cube = Cube(size=(1, 1, 5), center=CenterType.CENTER).translate(pt.to_tuple())

@@ -1,4 +1,3 @@
-
 from .config import EnvConfig
 from .core import Point3D, SolxObject
 from .primitives import (
