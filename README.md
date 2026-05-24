@@ -5,6 +5,13 @@ An extended API for SolidPython and OpenSCAD.
 
 This package requires OpenSCAD to be installed on your system.
 
+This package also requires `setuptools<82` due to compatibility constraints.
+If needed, install it explicitly before installing `solx`:
+
+```bash
+uv add "setuptools<82"
+```
+
 ### Installing OpenSCAD
 
 **Ubuntu/Debian:**
