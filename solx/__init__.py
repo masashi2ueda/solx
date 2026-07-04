@@ -7,6 +7,7 @@ from .primitives import (
     Cylinder,
     DefautltCenterType,
     HollowCube,
+    HullCircles,
     PolygonExtrude,
     RoundedCube,
 )
@@ -22,5 +23,6 @@ __all__ = [
     "CapsuleCube",
     "EnvConfig",
     "HollowCube",
+    "HullCircles",
     "DefautltCenterType",
 ]

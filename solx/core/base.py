@@ -108,6 +108,8 @@ class Point3D:
     def distance_to(self, other: Point3D) -> float:
         return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2)
 
+    def __repr__(self) -> str:
+        return f"Point3D(x={self.x}, y={self.y}, z={self.z})"
 
 class SolxObject:
     """Wrapper class for SolidPython/OpenSCAD nodes.
